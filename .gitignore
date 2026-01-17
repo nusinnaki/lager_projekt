@@ -1,0 +1,20 @@
+# databases
+db/*.db
+
+# raw business data
+data/*.xlsx
+data/*.numbers
+
+# local lists with real data
+data/workers.csv
+data/products_master.csv
+
+# keep templates (you will create these)
+!data/workers.template.csv
+!data/products_master.template.csv
+
+# env and caches
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
