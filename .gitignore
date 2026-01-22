@@ -19,6 +19,3 @@ data/products_master.csv
 __pycache__/
 *.pyc
 .DS_Store
-
-
-scripts/
