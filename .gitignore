@@ -4,6 +4,7 @@ db/*.db
 # raw business data
 data/*.xlsx
 data/*.numbers
+data/qr_labels.pdf
 
 # local lists with real data
 data/workers.csv
