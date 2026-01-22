@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>POPSITE Lager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <div class="topRow">
+      <a class="btn" href="index.html">Back</a>
+      <h1 id="pageTitle" class="pageTitle"></h1>
+    </div>
+
+    <section class="panel">
+      <div class="panelTitle">Action</div>
+
+      <div class="formGrid">
+        <label>Worker</label>
+        <select id="workerSelect" required>
+          <option value="" selected disabled>Select worker</option>
+        </select>
+
+        <label>Product</label>
+        <div class="scanBlock">
+          <button type="button" id="scanBtn" class="btn">SCAN</button>
+          <div class="orText">or</div>
+          <select id="productSelect" required>
+            <option value="" selected disabled>Select from the list</option>
+          </select>
+          <input id="scanPreview" class="input" type="text" readonly placeholder="Scanned product will appear here">
+        </div>
+
+        <label>Quantity</label>
+        <input id="qtyInput" class="input" type="number" min="1" step="1" value="1" required>
+      </div>
+
+      <div class="actionsRow">
+        <button type="button" class="btn primary" id="takeBtn">Take</button>
+        <button type="button" class="btn primary" id="loadBtn">Load</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panelTitle">Current stock</div>
+      <div class="tableWrap">
+        <table class="table" id="stockTable">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Qty</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="scannerOverlay" class="scannerOverlay" style="display:none;">
+    <div class="scannerBox">
+      <div class="scannerHeader">
+        <div>Scan code</div>
+        <button type="button" id="closeScanBtn" class="btn">Close</button>
+      </div>
+      <video id="scanVideo" autoplay playsinline></video>
+      <div class="scannerHint">Hold the QR code steady in the center</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

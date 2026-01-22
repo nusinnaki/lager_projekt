@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS workers (
 
 CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  product_source TEXT NOT NULL,
+  product_source TEXT,
   product_name TEXT NOT NULL,
   internal_id TEXT NOT NULL UNIQUE,
   qr_code TEXT NOT NULL UNIQUE
@@ -22,12 +22,13 @@ CREATE TABLE IF NOT EXISTS stock (
 
 CREATE TABLE IF NOT EXISTS logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ts TEXT NOT NULL,
-  action TEXT NOT NULL CHECK(action IN ('TAKE','LOAD')),
+  ts TEXT NOT NULL DEFAULT (datetime('now')),
+  action TEXT NOT NULL CHECK(action IN ('take','load')),
   worker_id INTEGER NOT NULL,
   product_id INTEGER NOT NULL,
   quantity INTEGER NOT NULL CHECK(quantity > 0),
-  delta INTEGER NOT NULL,
+  site TEXT NOT NULL,
+  note TEXT,
   FOREIGN KEY(worker_id) REFERENCES workers(id),
   FOREIGN KEY(product_id) REFERENCES products(id)
 );

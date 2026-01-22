@@ -3,6 +3,8 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from reportlab.pdfbase.pdfmetrics import stringWidth
+
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "data" / "products_master.csv"
 OUT = ROOT / "data" / "qr_labels.pdf"
@@ -12,18 +14,50 @@ def norm(x) -> str:
     return " ".join(str(x or "").replace("\xa0", " ").split()).strip()
 
 
-def wrap_text(s: str, max_chars: int = 30, max_lines: int = 3) -> list[str]:
-    s = s.strip()
+def wrap_text_to_width(
+    text: str,
+    font_name: str,
+    font_size: float,
+    max_width: float,
+    max_lines: int = 3,
+) -> list[str]:
+    text = norm(text)
+    if not text:
+        return []
+
+    words = text.split()
     lines: list[str] = []
-    while len(s) > max_chars and len(lines) < max_lines:
-        cut = s.rfind(" ", 0, max_chars + 1)
-        if cut == -1 or cut < 6:
-            cut = max_chars
-        lines.append(s[:cut].strip())
-        s = s[cut:].strip()
-    if s and len(lines) < max_lines:
-        lines.append(s)
-    return lines
+    current: list[str] = []
+
+    def width(s: str) -> float:
+        return stringWidth(s, font_name, font_size)
+
+    for word in words:
+        test = " ".join(current + [word])
+        if current and width(test) > max_width:
+            lines.append(" ".join(current))
+            current = [word]
+            if len(lines) >= max_lines:
+                break
+        else:
+            current.append(word)
+
+    if current and len(lines) < max_lines:
+        lines.append(" ".join(current))
+
+    # hard cut with ellipsis if a line is still too wide (single long token)
+    out: list[str] = []
+    ell = "…"
+    for ln in lines:
+        if width(ln) <= max_width:
+            out.append(ln)
+        else:
+            s = ln
+            while s and width(s + ell) > max_width:
+                s = s[:-1]
+            out.append((s + ell) if s else ell)
+
+    return out
 
 
 def main() -> None:
@@ -41,10 +75,8 @@ def main() -> None:
     with MASTER.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         needed = {"product_name", "internal_id", "qr_code"}
-        if not reader.fieldnames or not needed.issubset(set(reader.fieldnames)):
-            raise ValueError(
-                "data/products_master.csv must contain columns: product_name, internal_id, qr_code"
-            )
+        if not reader.fieldnames or not needed.issubset(reader.fieldnames):
+            raise ValueError("CSV must contain product_name, internal_id, qr_code")
 
         for r in reader:
             name = norm(r.get("product_name"))
@@ -71,8 +103,8 @@ def main() -> None:
     pad = 3 * mm
     qr_size = min(label_h - 2 * pad, label_w * 0.48)
 
-    def draw_qr(x: float, y: float, size: float, qr_text: str) -> None:
-        qrw = QrCodeWidget(qr_text)
+    def draw_qr(x: float, y: float, size: float, text: str) -> None:
+        qrw = QrCodeWidget(text)
         b = qrw.getBounds()
         w = b[2] - b[0]
         h = b[3] - b[1]
@@ -96,20 +128,24 @@ def main() -> None:
         text_x = qr_x + qr_size + 3 * mm
         top_y = y0 + label_h - pad - 2 * mm
 
-        c.setFont("Helvetica-Bold", 7)
+        name_font = "Helvetica-Bold"
+        name_size = 7
+        c.setFont(name_font, name_size)
+
+        available_w = (x0 + label_w) - text_x - pad
+        line_step = 3.6 * mm
+
         y = top_y
-        for ln in wrap_text(name, max_chars=30, max_lines=3):
+        for ln in wrap_text_to_width(name, name_font, name_size, available_w, max_lines=3):
             c.drawString(text_x, y, ln)
-            y -= 3.7 * mm
+            y -= line_step
 
         c.setFont("Helvetica", 7)
         c.drawString(text_x, y0 + pad + 9.5 * mm, f"ID: {iid}")
 
         c.setFont("Helvetica", 6.5)
-        max_qr_chars = 48
-        qr_line = qr_text if len(qr_text) <= max_qr_chars else (qr_text[: max_qr_chars - 1] + "…")
+        qr_line = qr_text[:47] + "…" if len(qr_text) > 48 else qr_text
         c.drawString(text_x, y0 + pad + 4.5 * mm, qr_line)
-
 
     per_page = cols * rows_per_page
     for i, (name, iid, qr_text) in enumerate(rows):
@@ -121,6 +157,7 @@ def main() -> None:
         col = pos % cols
         x = margin_x + col * (label_w + gap_x)
         y = H - margin_y - (r + 1) * label_h - r * gap_y
+
         draw_label(x, y, name, iid, qr_text)
 
     c.save()
