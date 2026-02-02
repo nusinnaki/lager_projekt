@@ -105,7 +105,6 @@ Web-based inventory tool with:
 - Frontend uses that value to select the matching product id.
 - The action then applies to the correct product row in the database.
 
-## Run locally
 
 ## Run backend
 
