@@ -1,21 +1,28 @@
-# databases
-db/*.db
-
-# raw business data
-data/*.xlsx
-data/*.numbers
-data/qr_labels.pdf
-
-# local lists with real data
-data/workers.csv
-data/products_master.csv
-
-# keep templates (you will create these)
-!data/workers.template.csv
-!data/products_master.template.csv
-
-# env and caches
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# OS/editor
 .DS_Store
+.vscode/
+.idea/
+
+# Build / temp
+*.log
+
+# Ignore project folders for now
+data/
+scripts/
+
+# Local databases (keep DB out of git)
+db/*.db
+db/*.sqlite
+db/*.sqlite3
+
+# Generated PDFs
+*.pdf
