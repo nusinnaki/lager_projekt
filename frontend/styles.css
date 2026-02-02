@@ -8,6 +8,7 @@ body { font-family: Arial, sans-serif; margin: 0; }
 .brandTitle{ margin:0; position:relative; top:6px; letter-spacing:1px; }
 .logo { max-width: 220px; width: 40%; height: auto; }
 
+/* keep this for index cards layout */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 
 .card { border: 1px solid #ddd; border-radius: 12px; overflow: hidden; background: #fff; text-decoration:none; color:#111; }
@@ -26,18 +27,21 @@ body { font-family: Arial, sans-serif; margin: 0; }
 .table th{ text-align:left; background:#fff; }
 .right{ text-align:right; }
 
-.formGrid{ display:grid; grid-template-columns: 160px 1fr; gap: 10px 14px; padding: 14px; align-items:start; }
-.input{ width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:10px; }
-select{ width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; }
+/* ===== Compact spacing for lager.html (worker/product rows) ===== */
+.header{ display:flex; align-items:center; gap:14px; margin-bottom:12px; } /* gap after Back */
 
-.scanBlock{ display:flex; flex-direction:column; gap:10px; }
-.orText{ text-align:center; opacity:0.7; margin: 0; }
+.formGrid{ display:grid; grid-template-columns: 160px 1fr; gap: 6px 10px; padding: 12px 14px; align-items:center; } /* thinner vertical gap */
+.input{ width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:10px; }
+select{ width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; }
 
-.actionsRow{ display:flex; gap:12px; padding: 0 14px 14px; }
-.btn{ display:inline-block; padding:10px 14px; border:1px solid #111; border-radius:10px; text-decoration:none; color:#111; background:#fff; cursor:pointer; }
+.scanBlock{ display:flex; flex-direction:column; gap:8px; }
+.orText{ text-align:center; opacity:0.7; margin: 6px 0; }
+
+.actionsRow{ display:flex; gap:10px; padding: 0 14px 12px; }
+.btn{ display:inline-block; padding:8px 12px; border:1px solid #111; border-radius:10px; text-decoration:none; color:#111; background:#fff; cursor:pointer; }
 .primary{ background:#111; color:#fff; }
 
-.msg{ padding: 0 14px 14px; min-height: 18px; }
+.msg{ padding: 0 14px 12px; min-height: 18px; }
 
 .scannerOverlay{
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
@@ -47,3 +51,46 @@ select{ width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:10px
 .scannerHeader{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:#f6f6f6; border-bottom:1px solid #ddd; font-weight:600; }
 #scanVideo{ width:100%; height:420px; object-fit:cover; display:block; background:#000; }
 .scannerHint{ padding:10px 14px; opacity:0.75; font-size:14px; }
+
+/* =======================
+   Lager page compact layout
+   ======================= */
+
+/* override grid only inside lager panels */
+.panel .grid {
+  grid-template-columns: 140px 1fr; /* label + input tighter */
+  gap: 4px 8px;                     /* MUCH thinner */
+  align-items: center;
+}
+
+/* tighter rows */
+.panel .row {
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* tighter labels */
+.panel label {
+  font-size: 13px;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+}
+
+/* compact inputs/selects */
+.panel .input,
+.panel select {
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+/* reduce panel padding slightly */
+.panel {
+  margin-top: 14px;
+}
+
+/* header spacing: gap after Back before Worker */
+.header {
+  gap: 18px;
+}

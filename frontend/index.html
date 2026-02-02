@@ -3,27 +3,130 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>POPSITE Lager</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Lager</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;      /* white */
+      color: #111;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 18px auto 40px;
+      padding: 0 16px;
+    }
+
+    /* Header */
+    .titleRow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 12px 0 22px;
+    }
+
+    .titleRow h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .titleRow img {
+      height: 64px;
+      width: auto;
+      position: relative;
+      top: 6px;
+    }
+
+    /* Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 26px;
+    }
+
+    .cardLink {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .card {
+      background: #f3f3f3;
+      border: 1px solid #d5d5d5;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+    }
+
+    .cardHeader {
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+
+    /* Image frame */
+    .frame img {
+      width: 100%;
+      height: auto;          /* image controls height */
+      display: block;
+    }
+
+
+    .frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;          /* mild, consistent crop */
+      object-position: center;
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .titleRow h1 { font-size: 28px; }
+      .titleRow img { height: 54px; }
+      .frame { height: 240px; }
+    }
+  </style>
 </head>
+
 <body>
-  <main class="container">
-    <div class="brandRow">
-      <h1 class="brandTitle">Lager</h1>
-      <img class="logo" src="assets/logo.png" alt="POPSITE Logo">
-    </div>
+  <main class="page">
+    <header class="titleRow">
+      <h1>Lager</h1>
+      <img src="assets/logo.png" alt="POPSITE Logo" />
+    </header>
 
-    <div class="grid">
-      <a class="card" href="lager.html?site=konstanz">
-        <div class="cardHeader">Konstanz</div>
-        <img src="assets/konstanz.jpg" alt="Konstanz">
+    <section class="grid">
+      <a class="cardLink" href="lager.html?site=konstanz">
+        <article class="card">
+          <div class="cardHeader">Konstanz</div>
+          <div class="frame">
+            <img src="assets/konstanz.jpg" alt="Konstanz">
+          </div>
+        </article>
       </a>
 
-      <a class="card" href="lager.html?site=sindelfingen">
-        <div class="cardHeader">Sindelfingen</div>
-        <img src="assets/sindelfingen.jpg" alt="Sindelfingen">
+      <a class="cardLink" href="lager.html?site=sindelfingen">
+        <article class="card">
+          <div class="cardHeader">Sindelfingen</div>
+          <div class="frame">
+            <img src="assets/sindelfingen.jpg" alt="Sindelfingen">
+          </div>
+        </article>
       </a>
-    </div>
+    </section>
   </main>
 </body>
 </html>

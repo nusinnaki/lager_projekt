@@ -80,7 +80,7 @@ def main():
     c = canvas.Canvas(str(OUT_PDF), pagesize=A4)
     W, H = A4
 
-    # Table-like grid: no internal gaps
+    # Table-like grid: no gaps
     cols_n = 3
     rows_per_page = 6
 
@@ -103,48 +103,47 @@ def main():
             return str(r["nc_nummer"]).strip()
         return ""
 
-    def sw(s: str, font: str, size: int) -> float:
+    def text_width(s: str, font: str, size: int) -> float:
         return c.stringWidth(s, font, size)
 
     def ellipsize(s: str, font: str, size: int, max_w: float) -> str:
         s = (s or "").strip()
         if not s:
             return ""
-        if sw(s, font, size) <= max_w:
+        if text_width(s, font, size) <= max_w:
             return s
         dots = "..."
-        if sw(dots, font, size) > max_w:
+        if text_width(dots, font, size) > max_w:
             return ""
         lo, hi = 0, len(s)
         while lo < hi:
             mid = (lo + hi) // 2
             cand = s[:mid].rstrip() + dots
-            if sw(cand, font, size) <= max_w:
+            if text_width(cand, font, size) <= max_w:
                 lo = mid + 1
             else:
                 hi = mid
         out = s[: max(0, lo - 1)].rstrip() + dots
-        while out and sw(out, font, size) > max_w:
+        while out and text_width(out, font, size) > max_w:
             out = out[:-1]
         return out
 
     def split_long_token(token: str, font: str, size: int, max_w: float):
-        token = (token or "").strip()
+        token = token.strip()
         if not token:
             return []
-        if sw(token, font, size) <= max_w:
+        if text_width(token, font, size) <= max_w:
             return [token]
 
         out = []
         i = 0
         n = len(token)
-
         while i < n:
             j = i + 1
             best = i + 1
             while j <= n:
                 chunk = token[i:j]
-                if sw(chunk, font, size) <= max_w:
+                if text_width(chunk, font, size) <= max_w:
                     best = j
                     j += 1
                 else:
@@ -152,7 +151,7 @@ def main():
 
             chunk = token[i:best]
             if best < n:
-                while chunk and sw(chunk + "-", font, size) > max_w:
+                while chunk and text_width(chunk + "-", font, size) > max_w:
                     best -= 1
                     chunk = token[i:best]
                 if not chunk:
@@ -163,38 +162,36 @@ def main():
                 out.append(chunk)
 
             i = best
-
         return out
 
     def wrap_mixed(text: str, font: str, size: int, max_w: float):
         text = (text or "").strip()
         if not text:
             return []
-        c.setFont(font, size)
 
+        c.setFont(font, size)
         words = text.split()
         lines = []
         cur = ""
 
         for w in words:
+            # hyphenate word if needed
             parts = split_long_token(w, font, size, max_w)
             for part in parts:
+                test = (cur + " " + part).strip()
                 if not cur:
                     test = part
-                else:
-                    test = cur + " " + part
-                if sw(test, font, size) <= max_w:
+                if text_width(test, font, size) <= max_w:
                     cur = test
                 else:
                     if cur:
                         lines.append(cur)
                     cur = part
-
         if cur:
             lines.append(cur)
         return lines
 
-    def lead(size: int) -> float:
+    def leading_for(size: int) -> float:
         if size >= 10:
             return 5.8 * mm
         if size == 9:
@@ -209,85 +206,101 @@ def main():
 
         pad = 4 * mm
         gap = 4 * mm
+        top_text_pad = 2.5 * mm
 
-        # QR (left)
         qr_side = label_h - 2 * pad
         qr_img = make_qr_image(payload)
-        c.drawImage(ImageReader(qr_img), x + pad, y + pad, qr_side, qr_side, mask="auto")
+        qr_reader = ImageReader(qr_img)
+        qr_x = x + pad
+        qr_y = y + pad
+        c.drawImage(qr_reader, qr_x, qr_y, qr_side, qr_side, mask="auto")
 
-        # text box (right)
-        text_x = x + pad + qr_side + gap
+        text_x = qr_x + qr_side + gap
         text_w = (x + label_w - pad) - text_x
 
-        top_y = y + label_h - pad
-        bottom_reserved = 7.5 * mm  # keep QR line safe
+        bottom_reserved = 7.5 * mm
+        top_y = y + label_h - pad - top_text_pad
         min_y = y + pad + bottom_reserved
         available_h = max(0.0, top_y - min_y)
 
         name = best_name(r)
         nc = best_nc(r)
 
-        # fixed sizes -> predictable, consistent printing
-        name_font = ("Helvetica-Bold", 9)
-        nc_font = ("Helvetica", 8)
+        # Always render something, but never escape the frame
+        name_sizes = [10, 9, 8]
+        nc_sizes = [9, 8, 7]
 
-        name_lead = lead(name_font[1])
-        nc_lead = lead(nc_font[1])
-        gap_between = 1.5 * mm
+        chosen_ns, chosen_ncs = 8, 7
+        name_lines, nc_lines = [], []
 
-        # wrap to width first
-        name_lines = wrap_mixed(name, name_font[0], name_font[1], text_w) or [""]
-        nc_lines = wrap_mixed(nc, nc_font[0], nc_font[1], text_w) or [""]
+        for ns in name_sizes:
+            for ncs in nc_sizes:
+                nl = wrap_mixed(name, "Helvetica-Bold", ns, text_w)
+                cl = wrap_mixed(nc, "Helvetica", ncs, text_w)
 
-        # HARD RESERVE space for NC: at least 2 lines if possible, else 1
-        want_nc_lines = 2 if available_h >= (2 * nc_lead + gap_between + name_lead) else 1
-        max_nc_lines = max(1, int(available_h // nc_lead)) if nc_lead > 0 else 1
-        use_nc_lines = min(want_nc_lines, max_nc_lines, len(nc_lines))
+                n_lead = leading_for(ns)
+                c_lead = leading_for(ncs)
+                needed = len(nl) * n_lead + (1.5 * mm if nl and cl else 0) + len(cl) * c_lead
 
-        nc_block_h = use_nc_lines * nc_lead
-        remaining_for_name = max(0.0, available_h - nc_block_h - gap_between)
+                if nl and cl and needed <= available_h:
+                    chosen_ns, chosen_ncs = ns, ncs
+                    name_lines, nc_lines = nl, cl
+                    break
+            if name_lines and nc_lines:
+                break
 
-        # allocate remaining to name
-        max_name_lines = max(1, int(remaining_for_name // name_lead)) if name_lead > 0 else 1
-        use_name_lines = min(max_name_lines, len(name_lines))
+        # If still too tall, clamp lines and ellipsize the last visible line.
+        if not name_lines:
+            chosen_ns = 8
+            name_lines = wrap_mixed(name, "Helvetica-Bold", chosen_ns, text_w) or [""]
+        if not nc_lines:
+            chosen_ncs = 7
+            nc_lines = wrap_mixed(nc, "Helvetica", chosen_ncs, text_w) or [""]
 
-        draw_name = name_lines[:use_name_lines]
-        if len(name_lines) > use_name_lines:
-            draw_name[-1] = ellipsize(draw_name[-1], name_font[0], name_font[1], text_w)
-        else:
-            draw_name[-1] = ellipsize(draw_name[-1], name_font[0], name_font[1], text_w)
+        cursor = top_y
 
-        draw_nc = nc_lines[:use_nc_lines]
-        if len(nc_lines) > use_nc_lines:
-            draw_nc[-1] = ellipsize(draw_nc[-1], nc_font[0], nc_font[1], text_w)
-        else:
-            draw_nc[-1] = ellipsize(draw_nc[-1], nc_font[0], nc_font[1], text_w)
+        # Name block
+        c.setFont("Helvetica-Bold", chosen_ns)
+        n_lead = leading_for(chosen_ns)
+        max_name_lines = int(max(0.0, available_h) // n_lead) if n_lead > 0 else 0
+        max_name_lines = max(1, min(len(name_lines), max_name_lines))
 
-        # draw with a small top padding so text doesn't start immediately at the border
-        cursor = top_y - 2.5 * mm
+        draw_name = name_lines[:max_name_lines]
+        # If truncation required vertically, ellipsize last line
+        if len(name_lines) > max_name_lines:
+            draw_name[-1] = ellipsize(draw_name[-1], "Helvetica-Bold", chosen_ns, text_w)
 
-        c.setFont(*name_font)
         for line in draw_name:
-            if cursor - name_lead < min_y:
+            if cursor - n_lead < min_y:
                 break
-            c.drawString(text_x, cursor, ellipsize(line, name_font[0], name_font[1], text_w))
-            cursor -= name_lead
+            c.drawString(text_x, cursor, ellipsize(line, "Helvetica-Bold", chosen_ns, text_w))
+            cursor -= n_lead
 
-        if cursor - gap_between >= min_y:
-            cursor -= gap_between
+        # gap
+        if cursor - 1.5 * mm >= min_y:
+            cursor -= 1.5 * mm
 
-        c.setFont(*nc_font)
+        # NC block
+        c.setFont("Helvetica", chosen_ncs)
+        c_lead = leading_for(chosen_ncs)
+        remaining_h = max(0.0, cursor - min_y)
+        max_nc_lines = int(remaining_h // c_lead) if c_lead > 0 else 0
+        max_nc_lines = max(1, min(len(nc_lines), max_nc_lines))
+
+        draw_nc = nc_lines[:max_nc_lines]
+        if len(nc_lines) > max_nc_lines:
+            draw_nc[-1] = ellipsize(draw_nc[-1], "Helvetica", chosen_ncs, text_w)
+
         for line in draw_nc:
-            if cursor - nc_lead < min_y:
+            if cursor - c_lead < min_y:
                 break
-            c.drawString(text_x, cursor, ellipsize(line, nc_font[0], nc_font[1], text_w))
-            cursor -= nc_lead
+            c.drawString(text_x, cursor, ellipsize(line, "Helvetica", chosen_ncs, text_w))
+            cursor -= c_lead
 
         # QR payload bottom-right
         c.setFont("Helvetica", 8)
         c.drawRightString(x + label_w - pad, y + pad, f"QR: {payload}")
 
-        # border
         c.setLineWidth(0.6)
         c.rect(x, y, label_w, label_h)
 

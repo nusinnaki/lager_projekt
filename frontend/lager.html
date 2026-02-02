@@ -3,75 +3,235 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>POPSITE Lager</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Lager</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <style>
+    body { background: #fff; }
+    .panel { background: #eee; }
+
+    /* Action mode selector */
+    .modeSelectRow {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      padding-bottom: 0;
+    }
+    .modeBtn {
+      flex: 1;
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,.18);
+      background: #fff;
+      cursor: pointer;
+    }
+    .modeBtn:hover { background: rgba(0,0,0,.04); }
+
+    /* After selecting a mode: show a title bar with Back */
+    .modeTitleRow {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      padding-bottom: 0;
+    }
+    .modeTitle {
+      font-weight: 900;
+      letter-spacing: 1px;
+      font-size: 18px;
+      margin: 0;
+    }
+
+    /* Hide action form until mode chosen */
+    #actionBody { display: none; }
+  </style>
 </head>
+
 <body>
   <main class="container">
-    <div class="topRow">
-      <a class="btn" href="index.html">Back</a>
-      <h1 id="pageTitle" class="pageTitle"></h1>
-    </div>
+    <header class="header">
+      <a class="btn" href="./index.html">Back</a>
+      <h1 id="title" class="title">Lager</h1>
+      <div class="spacer"></div>
+    </header>
 
     <section class="panel">
       <div class="panelTitle">Action</div>
 
-      <div class="formGrid">
-        <label>Worker</label>
-        <select id="workerSelect" required>
-          <option value="" selected disabled>Select worker</option>
-        </select>
+      <!-- MODE SELECT (initial view) -->
+      <div id="modeSelectRow" class="modeSelectRow">
+        <button id="modeLoad" class="modeBtn" type="button">LOAD</button>
+        <button id="modeTake" class="modeBtn" type="button">TAKE</button>
+      </div>
 
-        <label>Product</label>
-        <div class="scanBlock">
-          <button type="button" id="scanBtn" class="btn">SCAN</button>
-          <div class="orText">or</div>
-          <select id="productSelect" required>
-            <option value="" selected disabled>Select from the list</option>
+      <!-- MODE TITLE (after selection) -->
+      <div id="modeTitleRow" class="modeTitleRow">
+        <button id="modeBack" class="btn" type="button">Back</button>
+        <h2 id="modeTitle" class="modeTitle">LOAD</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <!-- ACTION FORM -->
+      <div id="actionBody">
+        <div class="grid">
+          <label>Worker</label>
+          <select id="workerSelect" class="input">
+            <option value="" selected disabled>Select worker</option>
           </select>
-          <input id="scanPreview" class="input" type="text" readonly placeholder="Scanned product will appear here">
+
+          <label>Product</label>
+          <div>
+            <div class="row">
+              <select id="productSelect" class="input" style="flex:1;">
+                <option value="" selected disabled>Select product</option>
+              </select>
+            </div>
+
+            <div class="orText" style="margin:10px 0;">or</div>
+
+            <div class="row">
+              <button id="qrScanBtn" class="btn primary" type="button">SCAN</button>
+              <button id="qrStopBtn" class="btn" type="button" style="display:none;">Stop</button>
+            </div>
+
+            <div id="qrScanBox" style="display:none; margin-top:10px;">
+              <div id="qrReader" style="width:100%; max-width:520px;"></div>
+              <div class="scannerHint">Point the camera at the QR</div>
+            </div>
+          </div>
+
+
+          <label>Quantity</label>
+          <input id="qty" class="input" type="number" min="1" step="1" value="1" />
         </div>
 
-        <label>Quantity</label>
-        <input id="qtyInput" class="input" type="number" min="1" step="1" value="1" required>
-      </div>
+        <div class="row">
+          <button id="takeBtn" class="btn primary" type="button" style="display:none;">TAKE</button>
+          <button id="loadBtn" class="btn primary" type="button" style="display:none;">LOAD</button>
+        </div>
 
-      <div class="actionsRow">
-        <button type="button" class="btn primary" id="takeBtn">Take</button>
-        <button type="button" class="btn primary" id="loadBtn">Load</button>
+        <div id="msg" class="msg"></div>
       </div>
-
-      <div id="msg" class="msg"></div>
     </section>
 
     <section class="panel">
       <div class="panelTitle">Current stock</div>
       <div class="tableWrap">
-        <table class="table" id="stockTable">
+        <table class="table">
           <thead>
             <tr>
               <th>Product</th>
               <th class="right">Qty</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="stockBody"></tbody>
         </table>
       </div>
     </section>
 
+    <section class="panel">
+      <div class="panelTitle">Admin</div>
+
+      <button id="openAdmin" class="btn" type="button">Change workers/products</button>
+
+      <div id="adminGate" class="adminGate" style="display:none;">
+        <div class="row">
+          <input id="adminToken" class="input" type="password" placeholder="Admin token" />
+          <button id="adminLogin" class="btn primary" type="button">Unlock</button>
+          <button id="adminLogout" class="btn" type="button">Lock</button>
+        </div>
+
+        <div id="adminMsg" class="msg"></div>
+
+        <div id="adminPanel" style="display:none;">
+          <div class="divider"></div>
+
+          <div class="adminBlockTitle">Workers</div>
+
+          <div class="grid">
+            <label>Add worker</label>
+            <div class="row">
+              <input id="wAddName" class="input" type="text" placeholder="New name" />
+              <button id="wAddBtn" class="btn primary" type="button">Add</button>
+            </div>
+
+            <label>Rename worker</label>
+            <div class="row">
+              <select id="wRenameSelect" class="input"></select>
+              <input id="wRenameName" class="input" type="text" placeholder="New name" />
+              <button id="wRenameBtn" class="btn primary" type="button">Rename</button>
+            </div>
+
+            <label>Remove worker</label>
+            <div class="row">
+              <select id="wRemoveSelect" class="input"></select>
+              <button id="wRemoveBtn" class="btn primary" type="button">Remove</button>
+            </div>
+
+            <label>Reactivate worker</label>
+            <div class="row">
+              <select id="wReactivateSelect" class="input"></select>
+              <button id="wReactivateBtn" class="btn primary" type="button">Reactivate</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="adminBlockTitle">Products</div>
+
+          <div class="grid">
+            <label>Add product</label>
+            <div>
+              <div class="grid" style="grid-template-columns: 180px 1fr;">
+                <div>Category</div>
+                <select id="pAddKind" class="input">
+                  <option value="" selected disabled>Select</option>
+                  <option value="netcom">Netcom Produkte</option>
+                  <option value="werkzeug">Werkzeug</option>
+                </select>
+              </div>
+
+              <div id="pAddNetcomFields" style="display:none; margin-top: 10px;">
+                <div class="grid" style="grid-template-columns: 180px 1fr;">
+                  <div>NC Nummer</div>
+                  <input id="pAddNc" class="input" type="text" placeholder="NC Nummer" />
+
+                  <div>Materialkurztext</div>
+                  <input id="pAddMk" class="input" type="text" placeholder="Materialkurztext" />
+                </div>
+              </div>
+
+              <div id="pAddWerkzeugFields" style="display:none; margin-top: 10px;">
+                <div class="grid" style="grid-template-columns: 180px 1fr;">
+                  <div>Produkt Name</div>
+                  <input id="pAddPn" class="input" type="text" placeholder="Produkt Name" />
+                </div>
+              </div>
+
+              <div class="row" style="margin-top: 10px;">
+                <button id="pAddBtn" class="btn primary" type="button">Add</button>
+              </div>
+            </div>
+
+            <label>Remove product</label>
+            <div class="row">
+              <select id="pRemoveSelect" class="input"></select>
+              <button id="pRemoveBtn" class="btn primary" type="button">Remove</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
   </main>
 
-  <div id="scannerOverlay" class="scannerOverlay" style="display:none;">
-    <div class="scannerBox">
-      <div class="scannerHeader">
-        <div>Scan code</div>
-        <button type="button" id="closeScanBtn" class="btn">Close</button>
-      </div>
-      <video id="scanVideo" autoplay playsinline></video>
-      <div class="scannerHint">Hold the QR code steady in the center</div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+  <script src="./api.js"></script>
+  <script src="./take_load.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="./qr.js"></script>
+  <script src="./admin.js"></script>
 </body>
 </html>
