@@ -104,3 +104,16 @@ Web-based inventory tool with:
 - Phone camera scan reads the QR payload (e.g. `37`).
 - Frontend uses that value to select the matching product id.
 - The action then applies to the correct product row in the database.
+
+## Run locally
+
+```bash
+git clone <repo>
+cd project
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+python backend/main.py
+```
