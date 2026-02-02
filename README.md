@@ -107,8 +107,11 @@ Web-based inventory tool with:
 
 ## Run locally
 
+## Run backend
+
+Open a **first terminal**.
+
 ```bash
-git clone <repo>
 cd project
 
 python -m venv .venv
@@ -116,4 +119,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 python backend/main.py
+```
+## Run frontend
+
+Open a **second terminal**.
+
+```bash
+cd project/frontend
+npm install
+npm run dev
 ```
