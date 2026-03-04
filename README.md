@@ -1,13 +1,14 @@
+````markdown
 # POPSITE Lager Tool
 
 Local web-based inventory management system.
 
-- FastAPI backend (SQLite)
-- Static HTML/JS frontend
-- Worker & product management
-- Stock tracking with logging
-- QR-based product selection
-- Admin-protected endpoints
+- FastAPI backend (SQLite)  
+- Static HTML/JS frontend  
+- Worker & product management  
+- Stock tracking with logging  
+- QR-based product selection  
+- Admin-protected endpoints  
 
 ---
 
@@ -19,7 +20,7 @@ Local web-based inventory management system.
 
 ---
 
-# Quick Start (Recommended)
+# Quick Start
 
 ## 1. Clone the Repository
 
@@ -32,16 +33,26 @@ cd lager_projekt
 
 ## 2. Install pipenv (only once)
 
+### macOS / Linux
+
 ```bash
 python3 -m pip install --user pipenv
 ```
 
-If `pipenv` is not found after installation:
+If `pipenv` is not found:
 
 ```bash
 echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
+
+### Windows (PowerShell)
+
+```powershell
+python -m pip install --user pipenv
+```
+
+If `pipenv` is not recognized, restart PowerShell.
 
 ---
 
@@ -55,20 +66,35 @@ This installs all backend dependencies from `Pipfile.lock`.
 
 ---
 
-## 4. Start the Website
+# Start the Website
 
-Use the provided development script:
+## macOS
 
 ```bash
 chmod +x run_dev.sh
 ./run_dev.sh
 ```
 
-This will automatically:
+## Linux
 
-* Start backend on `http://127.0.0.1:8000`
-* Start frontend on `http://127.0.0.1:5500`
-* Set development admin token to:
+```bash
+chmod +x run_dev.sh
+./run_dev.sh
+```
+
+## Windows (PowerShell)
+
+```powershell
+.\run_dev.ps1
+```
+
+---
+
+The development script automatically:
+
+* Starts backend on `http://127.0.0.1:8000`
+* Starts frontend on `http://127.0.0.1:5500`
+* Sets development admin token to:
 
 ```
 popsite
@@ -88,7 +114,7 @@ or
 http://127.0.0.1:5500/?site=sindelfingen
 ```
 
-Do **NOT** open HTML files via `file://`.
+Do NOT open HTML files via `file://`.
 
 Camera scanning only works when served via HTTP.
 
@@ -165,25 +191,34 @@ Main files:
 
 ## Port already in use
 
+### macOS / Linux
+
 ```bash
 lsof -ti tcp:8000 | xargs kill -9
 lsof -ti tcp:5500 | xargs kill -9
+```
+
+### Windows
+
+```powershell
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
 ```
 
 ---
 
 ## Admin not working
 
-* Ensure you started with `./run_dev.sh`
+* Ensure you started with `run_dev.sh` or `run_dev.ps1`
 * Use token: `popsite`
-* Restart script if needed
+* Restart the script if needed
 
 ---
 
 System runs fully locally.
 No external services required.
 
-After cloning and running `./run_dev.sh`, the project is ready to use.
+After cloning and running the appropriate dev script, the project is ready to use.
 
 ```
 ```
