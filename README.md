@@ -2,12 +2,12 @@
 
 Local web-based inventory management system.
 
-- FastAPI backend (SQLite)  
-- Static HTML/JS frontend  
-- Worker & product management  
-- Stock tracking with logging  
-- QR-based product selection  
-- Admin-protected endpoints  
+- FastAPI backend (SQLite)
+- Static HTML/JS frontend
+- Worker and product management
+- Stock tracking with logging
+- QR-based product selection
+- Admin-protected endpoints
 
 ---
 
@@ -19,9 +19,7 @@ Local web-based inventory management system.
 
 ---
 
-# Quick Start
-
-## 1. Clone the Repository
+# 1. Clone the Repository
 
 ```bash
 git clone https://github.com/nusinnaki/lager_projekt.git
@@ -30,9 +28,9 @@ cd lager_projekt
 
 ---
 
-## 2. Install pipenv (only once)
+# START ON macOS / Linux (bash)
 
-### macOS / Linux
+## 1. Install pipenv (only once)
 
 ```bash
 python3 -m pip install --user pipenv
@@ -41,67 +39,59 @@ python3 -m pip install --user pipenv
 If `pipenv` is not found:
 
 ```bash
-echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.bashrc 2>/dev/null || true
+source ~/.zshrc 2>/dev/null || true
 ```
-
-### Windows (PowerShell)
-
-```powershell
-python -m pip install --user pipenv
-```
-
-If `pipenv` is not recognized, restart PowerShell.
 
 ---
 
-## 3. Install Dependencies
+## 2. Install dependencies
 
 ```bash
 pipenv sync
 ```
 
-This installs all backend dependencies from `Pipfile.lock`.
-
----
-
-# Start the Website
-
-## macOS
+If that fails:
 
 ```bash
-chmod +x run_dev.sh
-./run_dev.sh
+pipenv install
 ```
 
-## Linux
+---
+
+## 3. Start backend
+
+From project root:
 
 ```bash
-chmod +x run_dev.sh
-./run_dev.sh
+export ADMIN_TOKEN="popsite"
+pipenv run uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Windows (PowerShell)
+You should see:
 
-```powershell
-.\run_dev.ps1
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+
+Leave this terminal open.
+
+---
+
+## 4. Start frontend
+
+Open a second terminal:
+
+```bash
+cd frontend
+python3 -m http.server 5500
 ```
 
 ---
 
-The development script automatically:
-
-* Starts backend on `http://127.0.0.1:8000`
-* Starts frontend on `http://127.0.0.1:5500`
-* Sets development admin token to:
-
-```
-popsite
-```
-
----
-
-# Open in Browser
+## 5. Open in browser
 
 ```
 http://127.0.0.1:5500/?site=konstanz
@@ -113,111 +103,100 @@ or
 http://127.0.0.1:5500/?site=sindelfingen
 ```
 
-Do NOT open HTML files via `file://`.
-
-Camera scanning only works when served via HTTP.
-
 ---
 
-# Admin Access
+# START ON Windows (PowerShell)
 
-Admin token for development:
-
-```
-popsite
-```
-
-Admin allows:
-
-* Add workers
-* Activate/deactivate workers
-* Add products
-* Activate/deactivate products
-
-Admin requests use header:
-
-```
-X-Admin-Token: <token>
-```
-
----
-
-# How the System Works
-
-## Backend
-
-Runs on port **8000**
-
-Main files:
-
-* `backend/main.py`
-* `backend/db.py`
-* `backend/schema.sql`
-
-Database:
-
-```
-db/Lager_live.db
-```
-
----
-
-## Frontend
-
-Runs on port **5500**
-
-Main files:
-
-* `frontend/index.html`
-* `frontend/lager.html`
-* `frontend/api.js`
-* `frontend/take_load.js`
-* `frontend/admin.js`
-* `frontend/qr.js`
-
----
-
-# QR Workflow
-
-* QR payload = product `id`
-* Scan selects product automatically
-* Perform TAKE or LOAD
-* Camera requires HTTP origin
-
----
-
-# Troubleshooting
-
-## Port already in use
-
-### macOS / Linux
-
-```bash
-lsof -ti tcp:8000 | xargs kill -9
-lsof -ti tcp:5500 | xargs kill -9
-```
-
-### Windows
+## 1. Install pipenv (only once)
 
 ```powershell
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
+py -m pip install --user pipenv
+```
+
+If `pipenv` is not found after installation, restart PowerShell.
+
+---
+
+## 2. Install dependencies
+
+From project root:
+
+```powershell
+pipenv sync
+```
+
+If that fails:
+
+```powershell
+pipenv install
 ```
 
 ---
 
-## Admin not working
+## 3. Start backend
 
-* Ensure you started with `run_dev.sh` or `run_dev.ps1`
-* Use token: `popsite`
-* Restart the script if needed
+```powershell
+$env:ADMIN_TOKEN="popsite"
+pipenv run uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+You must see:
+
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+
+Keep this window open.
 
 ---
 
-System runs fully locally.
-No external services required.
+## 4. Start frontend
 
-After cloning and running the appropriate dev script, the project is ready to use.
+Open a new PowerShell window:
+
+```powershell
+cd frontend
+py -m http.server 5500
+```
+
+---
+
+## 5. Open in browser
+
+```
+http://127.0.0.1:5500/?site=konstanz
+```
+
+or
+
+```
+http://127.0.0.1:5500/?site=sindelfingen
+```
+
+---
+
+# If the port is blocked
+
+Sometimes a crashed server keeps the port occupied.
+
+macOS / Linux
+lsof -ti tcp:8000 | xargs kill -9
+lsof -ti tcp:5500 | xargs kill -9
+
+Windows (PowerShell)
+Get-NetTCPConnection -LocalPort 8000 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+Get-NetTCPConnection -LocalPort 5500 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+
+Then start the servers again.
+
+# Important Notes
+
+* Do not open HTML via `file://`
+* Camera scanning only works when served via HTTP
+* Admin token (development): `popsite`
+* If you change the token, restart the backend
+* Backend runs on port 8000
+* Frontend runs on port 5500
 
 ```
 ```
