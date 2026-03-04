@@ -1,4 +1,3 @@
-````markdown
 # POPSITE Lager Tool
 
 Local web-based inventory management system.
