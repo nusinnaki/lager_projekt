@@ -13,12 +13,14 @@ Local web-based inventory management system.
 
 ## Requirements
 
-- Docker installed
+- Install Docker
+- Download Docklerfile from the repo
 
 ---
 
 ## Run with Docker (recommended)
 ---
+Run the following on shell 
 
 ```shell
 docker build -t lager-projekt .  
@@ -27,6 +29,7 @@ docker run --rm -it -p 8000:8000 -p 5500:5500 lager-projekt:latest
 
 
 ## 5. Open in browser
+Once you run the code, click the following
 
 [app](http://localhost:5500/lager.html?site=konstanz)
 ---
