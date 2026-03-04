@@ -1,130 +1,190 @@
+````markdown
 # POPSITE Lager Tool
 
-Web-based inventory tool with:
+Local web-based inventory management system.
+
 - FastAPI backend (SQLite)
 - Static HTML/JS frontend
-- Admin panel for managing workers and products
-- Take/Load stock actions with logging
-- QR workflow for Netcom products (QR payload equals product id)
+- Worker & product management
+- Stock tracking with logging
+- QR-based product selection
+- Admin-protected endpoints
 
-## Project structure
+---
 
-- backend/
-  - main.py: FastAPI app and API routes
-  - db.py: SQLite connection helpers
-  - schema.sql: database schema
-  - seed.py: one-time database seeding
-- frontend/
-  - index.html: site selection landing page
-  - lager.html: inventory UI (take/load, stock table, admin, scanner)
-  - styles.css: shared styling
-  - api.js: API base + fetch helpers
-  - take_load.js: load workers/products/stock and perform take/load actions
-  - admin.js: admin UI logic (workers/products CRUD, activation)
-  - qr.js: QR input and camera scan integration
-  - assets/: logo and site images
-- db/
-  - Lager_live.db: SQLite database (local)
-- data/ (ignored)
-  - local CSV/PDF/assets for importing and QR label output
-- scripts/ (ignored)
-  - helper scripts (imports, QR label generation)
+# Requirements
 
-## How it works
+- Python 3.9+
+- pip
+- Git
 
-### 1) Backend startup
-1. Loads environment variable `ADMIN_TOKEN` (required for admin endpoints).
-2. Opens SQLite database from `db/`.
-3. Serves REST API under:
-   - `/api/{site}/workers`
-   - `/api/{site}/products`
-   - `/api/{site}/stock`
-   - `/api/{site}/take`
-   - `/api/{site}/load`
-   - `/api/{site}/admin/...`
+---
 
-### 2) Database model (high level)
-- `workers`
-  - immutable integer `id` (internal)
-  - `name`
-  - `active` flag
-- `products`
-  - immutable integer `id` (this is the QR payload for Netcom products)
-  - `kind`:
-    - `netcom`: uses `nc_nummer` + `materialkurztext`
-    - `werkzeug`: uses `product_name`
-  - `active` flag
-- `stock`
-  - one row per product id, holds current quantity
-- `logs`
-  - records take/load actions (who, what, how much, site, timestamp)
+# Quick Start (Recommended)
 
-### 3) Frontend flow
-
-#### Landing page (index.html)
-1. Shows two site cards (Konstanz, Sindelfingen).
-2. Clicking a card opens:
-   - `lager.html?site=konstanz`
-   - `lager.html?site=sindelfingen`
-
-#### Lager page (lager.html)
-1. `api.js` reads `site` from the query string and sets API base:
-   - `http://127.0.0.1:8000/api/<site>`
-2. `take_load.js` loads:
-   - active workers into Worker dropdown
-   - active products into Product dropdown (labels differ by kind)
-   - stock table into “Current stock”
-3. User chooses action mode:
-   - LOAD or TAKE
-4. User selects:
-   - worker
-   - product (dropdown) or QR scan
-   - quantity
-5. On action button click:
-   - frontend sends POST `/take` or `/load`
-   - backend validates and updates stock
-   - frontend reloads stock table and shows status message
-
-### 4) Admin panel
-1. User enters admin token (must match backend `ADMIN_TOKEN`).
-2. Admin endpoints require header:
-   - `X-Admin-Token: <token>`
-3. Workers:
-   - add
-   - rename
-   - deactivate
-   - reactivate
-4. Products:
-   - add Netcom product (NC Nummer + Materialkurztext)
-   - add Werkzeug product (Produkt Name)
-   - deactivate product (keeps id stable; active flag changes)
-
-### 5) QR workflow
-- For Netcom products, QR payload equals the immutable product `id`.
-- Phone camera scan reads the QR payload (e.g. `37`).
-- Frontend uses that value to select the matching product id.
-- The action then applies to the correct product row in the database.
-
-
-## Run backend
-
-Open a **first terminal**.
+## 1. Clone the Repository
 
 ```bash
-cd project
+git clone https://github.com/nusinnaki/lager_projekt.git
+cd lager_projekt
+````
 
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+---
 
-python backend/main.py
+## 2. Install pipenv (only once)
+
+```bash
+python3 -m pip install --user pipenv
 ```
-## Run frontend
 
-Open a **second terminal**.
+If `pipenv` is not found after installation:
 
 ```bash
-cd project/frontend
-npm install
-npm run dev
+echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+---
+
+## 3. Install Dependencies
+
+```bash
+pipenv sync
+```
+
+This installs all backend dependencies from `Pipfile.lock`.
+
+---
+
+## 4. Start the Website
+
+Use the provided development script:
+
+```bash
+chmod +x run_dev.sh
+./run_dev.sh
+```
+
+This will automatically:
+
+* Start backend on `http://127.0.0.1:8000`
+* Start frontend on `http://127.0.0.1:5500`
+* Set development admin token to:
+
+```
+popsite
+```
+
+---
+
+# Open in Browser
+
+```
+http://127.0.0.1:5500/?site=konstanz
+```
+
+or
+
+```
+http://127.0.0.1:5500/?site=sindelfingen
+```
+
+Do **NOT** open HTML files via `file://`.
+
+Camera scanning only works when served via HTTP.
+
+---
+
+# Admin Access
+
+Admin token for development:
+
+```
+popsite
+```
+
+Admin allows:
+
+* Add workers
+* Activate/deactivate workers
+* Add products
+* Activate/deactivate products
+
+Admin requests use header:
+
+```
+X-Admin-Token: <token>
+```
+
+---
+
+# How the System Works
+
+## Backend
+
+Runs on port **8000**
+
+Main files:
+
+* `backend/main.py`
+* `backend/db.py`
+* `backend/schema.sql`
+
+Database:
+
+```
+db/Lager_live.db
+```
+
+---
+
+## Frontend
+
+Runs on port **5500**
+
+Main files:
+
+* `frontend/index.html`
+* `frontend/lager.html`
+* `frontend/api.js`
+* `frontend/take_load.js`
+* `frontend/admin.js`
+* `frontend/qr.js`
+
+---
+
+# QR Workflow
+
+* QR payload = product `id`
+* Scan selects product automatically
+* Perform TAKE or LOAD
+* Camera requires HTTP origin
+
+---
+
+# Troubleshooting
+
+## Port already in use
+
+```bash
+lsof -ti tcp:8000 | xargs kill -9
+lsof -ti tcp:5500 | xargs kill -9
+```
+
+---
+
+## Admin not working
+
+* Ensure you started with `./run_dev.sh`
+* Use token: `popsite`
+* Restart script if needed
+
+---
+
+System runs fully locally.
+No external services required.
+
+After cloning and running `./run_dev.sh`, the project is ready to use.
+
+```
 ```

@@ -1,47 +1,87 @@
 (function () {
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(window.location.search);
   const SITE = (params.get("site") || "konstanz").toLowerCase().trim();
-  const API = `http://127.0.0.1:8000/api/${SITE}`;
 
+  if (!SITE) {
+    throw new Error("Missing ?site=konstanz or ?site=sindelfingen");
+  }
 
-  function errText(res) {
-    return res.text().catch(() => "");
+  // Explicit backend origin (FastAPI on 8000)
+  const API_BASE = "http://127.0.0.1:8000";
+  const API = `${API_BASE}/api/${SITE}`;
+
+  async function readError(res) {
+    try {
+      return await res.text();
+    } catch {
+      return "";
+    }
   }
 
   async function apiGet(path) {
-    if (!API) throw new Error("Missing ?site=konstanz or ?site=sindelfingen");
-    const res = await fetch(`${API}${path}`);
-    if (!res.ok) throw new Error(`${res.status} ${await errText(res)}`);
-    return await res.json();
+    const res = await fetch(`${API}${path}`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      const msg = await readError(res);
+      throw new Error(`GET ${path} -> ${res.status} ${msg}`);
+    }
+
+    return res.json();
   }
 
   async function apiPost(path, body) {
-    if (!API) throw new Error("Missing ?site=konstanz or ?site=sindelfingen");
     const res = await fetch(`${API}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`${res.status} ${await errText(res)}`);
-    return await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const msg = await readError(res);
+      throw new Error(`POST ${path} -> ${res.status} ${msg}`);
+    }
+
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
   }
 
   async function adminFetch(path, method, body) {
-    if (!API) throw new Error("Missing ?site=konstanz or ?site=sindelfingen");
-    const tok = (sessionStorage.getItem("admin_token") || "").trim();
-    if (!tok) throw new Error("Missing admin token");
+    const token = (sessionStorage.getItem("admin_token") || "").trim();
+    if (!token) {
+      throw new Error("Missing admin token");
+    }
 
     const res = await fetch(`${API}${path}`, {
       method,
       headers: {
         "Content-Type": "application/json",
-        "X-Admin-Token": tok,
+        "Accept": "application/json",
+        "X-Admin-Token": token
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? JSON.stringify(body) : undefined
     });
 
-    if (!res.ok) throw new Error(`${res.status} ${await errText(res)}`);
-    return await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = await readError(res);
+      throw new Error(`${method} ${path} -> ${res.status} ${msg}`);
+    }
+
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
   }
 
   window.App = window.App || {};

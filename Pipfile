@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+pandas = "*"
+openpyxl = "*"
+python-dotenv = "*"
+
+# only if you upload files through FastAPI
+python-multipart = "*"
+
+[dev-packages]
+pytest = "*"
+ruff = "*"
+
+[requires]
+python_version = "3.9"

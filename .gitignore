@@ -1,28 +1,39 @@
 # Python
-.venv/
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.pytest_cache/
-.mypy_cache/
+*.egg-info/
+dist/
+build/
 
-# OS/editor
+# Virtual envs
+.venv/
+venv/
+ENV/
+.env
+.env.*
+
+# Pipenv local
+Pipfile.lock.backup
+
+# macOS
 .DS_Store
+
+# Editors
 .vscode/
 .idea/
 
-# Build / temp
+# Logs
 *.log
 
-# Ignore project folders for now
-data/
-scripts/
+# SQLite runtime artifacts (DO NOT COMMIT)
+db/*.db-wal
+db/*.db-shm
+db/*.db-journal
+db/*-wal
+db/*-shm
+db/*-journal
 
-# Local databases (keep DB out of git)
-db/*.db
-db/*.sqlite
-db/*.sqlite3
-
-# Generated PDFs
-*.pdf
+# Jupyter
+.ipynb_checkpoints/
