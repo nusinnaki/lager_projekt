@@ -12,12 +12,16 @@ Local web-based inventory management system.
 ---
 
 # Requirements
-
-- Python 3.9+
-- pip
-- Git
+- Docker
 
 ---
+
+```shell
+docker build -t lager-projekt .  
+docker run --rm -it -p 8000:8000 -p 5500:5500 lager-projekt:latest
+```
+
+[app](http://localhost:5500/lager.html?site=konstanz)
 
 # 1. Clone the Repository
 
