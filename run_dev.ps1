@@ -1,38 +1,28 @@
 # run_dev.ps1
 $ErrorActionPreference = "Stop"
 
-# Move to repo root (directory where this script lives)
-Set-Location -LiteralPath $PSScriptRoot
+$ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $ROOT
 
-# Config
-$env:ADMIN_TOKEN = "popsite"
+$backendHost = "127.0.0.1"
 $backendPort = 8000
 $frontendPort = 5500
 
-# Kill only processes bound to our ports (safe)
-function Kill-Port($port) {
-  $pids = netstat -ano | Select-String ":$port\s" | ForEach-Object {
-    ($_ -split "\s+")[-1]
-  } | Sort-Object -Unique
+# Dev admin token (must match what frontend users type)
+$env:ADMIN_TOKEN = "popsite"
 
-  foreach ($pid in $pids) {
-    if ($pid -match "^\d+$" -and $pid -ne "0") {
-      try { Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue } catch {}
-    }
-  }
-}
+# Stop old processes (best-effort)
+Get-Process -Name uvicorn -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process -Name python  -ErrorAction SilentlyContinue | Stop-Process -Force
 
-Kill-Port $backendPort
-Kill-Port $frontendPort
-
-Write-Host "Starting backend on http://127.0.0.1:$backendPort"
-Start-Process -WorkingDirectory $PSScriptRoot -NoNewWindow powershell -ArgumentList @(
+Write-Host "Starting backend on http://$backendHost`:$backendPort"
+Start-Process -NoNewWindow -WorkingDirectory $ROOT -FilePath "powershell.exe" -ArgumentList @(
   "-NoProfile",
-  "-ExecutionPolicy", "Bypass",
+  "-ExecutionPolicy", "ByPass",
   "-Command",
-  "cd `"$PSScriptRoot`"; `$env:ADMIN_TOKEN='popsite'; pipenv run uvicorn backend.main:app --reload --host 127.0.0.1 --port $backendPort"
+  "Set-Location '$ROOT'; `$env:ADMIN_TOKEN='popsite'; pipenv run uvicorn backend.main:app --reload --host $backendHost --port $backendPort"
 )
 
-Write-Host "Starting frontend on http://127.0.0.1:$frontendPort"
-Set-Location -LiteralPath (Join-Path $PSScriptRoot "frontend")
+Write-Host "Starting frontend on http://127.0.0.1`:$frontendPort"
+Set-Location (Join-Path $ROOT "frontend")
 python -m http.server $frontendPort
