@@ -12,11 +12,20 @@ Local web-based inventory management system.
 
 ## Requirements
 
-- Install Docker
-- Download Docklerfile from the repo
+- Docker
+
+Install Docker if needed:
+
+https://docs.docker.com/get-docker/
 
 
-## Run with Docker (recommended)
+## 1. Clone the Repo
+```shell
+git clone https://github.com/nusinnaki/lager_projekt.git
+cd lager_projekt
+```
+
+## 2. Run with Docker (recommended)
 
 Run the following on shell 
 
@@ -26,11 +35,10 @@ docker run --rm -it -p 8000:8000 -p 5500:5500 lager-projekt:latest
 ```
 
 
-## Open in browser
+## 3. Open in browser
 Once you run the code, click the following
 
-[app](http://localhost:5500/lager.html?site=konstanz)
-
+http://localhost:5500/lager.html?site=konstanz
 
 
 # Important Notes
