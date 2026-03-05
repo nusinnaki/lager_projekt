@@ -1,9 +1,9 @@
 FROM python:3-alpine
 WORKDIR /home
 RUN pip install --no-cache-dir pipenv
-RUN export PATH="/root/.local/bin:$PATH"
-RUN export ADMIN_TOKEN="popsite"
-RUN export LANG=C.UTF-8
+ENV PATH="/root/.local/bin:$PATH"
+ENV ADMIN_TOKEN="popsite"
+ENV LANG=C.UTF-8
 
 RUN apk add --no-cache git
 RUN git clone https://github.com/nusinnaki/lager_projekt.git
