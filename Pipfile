@@ -4,14 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
-uvicorn = "*"
 pandas = "*"
 openpyxl = "*"
 python-dotenv = "*"
-
-# only if you upload files through FastAPI
 python-multipart = "*"
+reportlab = "*"
+qrcode = {extras = ["pil"], version = "*"}
+fastapi = "*"
+uvicorn = "*"
+python-jose = "*"
+bcrypt = "==4.1.3"
+passlib = {extras = ["bcrypt"], version = "*"}
 
 [dev-packages]
 pytest = "*"

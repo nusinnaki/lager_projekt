@@ -10,11 +10,19 @@ DB_PATH = ROOT / "db" / "Lager_live.db"
 CSV_PATH = ROOT / "data" / "products.csv"
 
 LAGERS = [1, 2]  # 1=konstanz, 2=sindelfingen
+DEFAULT_KIND = "netcom"
+
+
+def norm(x: str | None) -> str:
+    return " ".join((x or "").replace("\xa0", " ").split()).strip()
 
 
 def main() -> None:
     if not CSV_PATH.exists():
         raise FileNotFoundError(CSV_PATH)
+
+    if not DB_PATH.exists():
+        raise FileNotFoundError(DB_PATH)
 
     con = sqlite3.connect(str(DB_PATH))
     con.row_factory = sqlite3.Row
@@ -32,41 +40,57 @@ def main() -> None:
                 raise SystemExit("products.csv has no header")
 
             hdr = {h.strip().lower(): h.strip() for h in r.fieldnames if h}
-            k_nc = hdr.get("nc_nummer") or hdr.get("nc-nummer") or hdr.get("ncnummer")
-            k_txt = hdr.get("materialkurztext") or hdr.get("material_kurztext")
 
-            if not k_nc or not k_txt:
-                raise SystemExit("products.csv must have headers: NC_Nummer and Materialkurztext")
+            k_nc = hdr.get("nc_nummer") or hdr.get("nc-nummer") or hdr.get("ncnummer")
+            k_name = hdr.get("product_name") or hdr.get("materialkurztext") or hdr.get("material_kurztext")
+
+            if not k_nc or not k_name:
+                raise SystemExit(
+                    "products.csv must have headers: NC_Nummer and Materialkurztext "
+                    "(or product_name)"
+                )
 
             for row in r:
-                nc = (row.get(k_nc) or "").strip()
-                txt = " ".join((row.get(k_txt) or "").split()).strip()
-                if not nc or not txt:
+                nc = norm(row.get(k_nc))
+                product_name = norm(row.get(k_name))
+
+                if not nc or not product_name:
                     continue
 
                 cur = con.execute(
-                    "INSERT OR IGNORE INTO products(nc_nummer, materialkurztext, active) VALUES (?, ?, 1)",
-                    (nc, txt),
+                    """
+                    INSERT OR IGNORE INTO products(kind, nc_nummer, product_name, active)
+                    VALUES (?, ?, ?, 1)
+                    """,
+                    (DEFAULT_KIND, nc, product_name),
                 )
                 inserted_products += cur.rowcount
 
                 # get product_id (existing or new)
                 pid_row = con.execute(
-                    "SELECT id FROM products WHERE nc_nummer=?",
+                    "SELECT id FROM products WHERE nc_nummer = ?",
                     (nc,),
                 ).fetchone()
+
+                if not pid_row:
+                    raise RuntimeError(f"Could not find product after insert: {nc}")
+
                 pid = int(pid_row["id"])
 
                 # ensure stock rows for both lagers
                 for lager_id in LAGERS:
                     cur2 = con.execute(
-                        "INSERT OR IGNORE INTO stock(lager_id, product_id, quantity) VALUES (?, ?, 0)",
+                        """
+                        INSERT OR IGNORE INTO stock(lager_id, product_id, quantity)
+                        VALUES (?, ?, 0)
+                        """,
                         (lager_id, pid),
                     )
                     ensured_stock += cur2.rowcount
 
         con.commit()
         print(f"OK: inserted {inserted_products} products, ensured {ensured_stock} stock rows")
+
     except Exception:
         con.rollback()
         raise

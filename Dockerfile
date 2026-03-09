@@ -1,8 +1,10 @@
 FROM python:3-alpine
+
 WORKDIR /home
+
 RUN pip install --no-cache-dir pipenv
+
 ENV PATH="/root/.local/bin:$PATH"
-ENV ADMIN_TOKEN="popsite"
 ENV LANG=C.UTF-8
 
 RUN apk add --no-cache git
@@ -11,9 +13,6 @@ RUN git clone https://github.com/nusinnaki/lager_projekt.git
 WORKDIR /home/lager_projekt
 
 RUN pipenv install
-
-EXPOSE 8000 5500
-# ... your previous layers
 
 EXPOSE 8000 5500
 
