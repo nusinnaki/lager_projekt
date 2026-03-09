@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -10,107 +10,265 @@
     body { background: #fff; }
     .panel { background: #eee; }
 
-    /* Action mode selector */
-    .modeSelectRow {
+    .topRow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .userBox {
+      font-size: 14px;
+      color: #333;
+      text-align: right;
+    }
+
+    .userLink {
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 700;
+    }
+
+    .topButtons {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .scanRow,
+    .actionRow,
+    .stockTools {
       display: flex;
       gap: 10px;
-      padding: 14px;
-      padding-bottom: 0;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      align-items: center;
     }
-    .modeBtn {
+
+    .actionRow {
+      display: none;
+    }
+
+    .actionBtn {
       flex: 1;
       text-align: center;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: .5px;
       padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid rgba(0,0,0,.18);
       background: #fff;
       cursor: pointer;
     }
-    .modeBtn:hover { background: rgba(0,0,0,.04); }
 
-    /* After selecting a mode: show a title bar with Back */
-    .modeTitleRow {
+    .actionBtn:hover {
+      background: rgba(0,0,0,.04);
+    }
+
+    .actionBtn.active {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .confirmBox {
       display: none;
-      align-items: center;
-      gap: 10px;
+      margin-top: 16px;
       padding: 14px;
-      padding-bottom: 0;
-    }
-    .modeTitle {
-      font-weight: 900;
-      letter-spacing: 1px;
-      font-size: 18px;
-      margin: 0;
+      border: 1px solid rgba(0,0,0,.12);
+      border-radius: 14px;
+      background: #fff;
     }
 
-    /* Hide action form until mode chosen */
-    #actionBody { display: none; }
+    .confirmTitle {
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .confirmGrid,
+    .passwordGrid {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px 14px;
+      align-items: center;
+    }
+
+    .confirmLabel {
+      font-weight: 700;
+    }
+
+    .confirmValue {
+      word-break: break-word;
+    }
+
+    .qtyRow {
+      margin-top: 12px;
+    }
+
+    .qtyRow input {
+      max-width: 140px;
+    }
+
+    .confirmActions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    #qrScanBox,
+    #stockQrScanBox {
+      display: none;
+      margin-top: 14px;
+    }
+
+    #qrReader,
+    #stockQrReader {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .scannerHint {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .stockSearch {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .modalWrap {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      z-index: 999;
+      padding: 20px;
+    }
+
+    .modalCard {
+      max-width: 520px;
+      margin: 60px auto 0;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #ddd;
+      box-shadow: 0 12px 30px rgba(0,0,0,.15);
+      overflow: hidden;
+    }
+
+    .modalHeader {
+      padding: 14px 16px;
+      font-weight: 800;
+      border-bottom: 1px solid #e5e5e5;
+      background: #f8f8f8;
+    }
+
+    .modalBody {
+      padding: 16px;
+    }
+
+    .modalActions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 760px) {
+      .confirmGrid,
+      .passwordGrid {
+        grid-template-columns: 1fr;
+      }
+
+      .topRow {
+        flex-direction: column;
+      }
+
+      .userBox {
+        text-align: left;
+      }
+
+      .topButtons {
+        justify-content: flex-start;
+      }
+    }
   </style>
 </head>
 
 <body>
   <main class="container">
     <header class="header">
-      <a class="btn" href="./index.html">Back</a>
-      <h1 id="title" class="title">Lager</h1>
-      <div class="spacer"></div>
+      <div class="topRow">
+        <div></div>
+
+        <div class="userBox">
+          <div id="currentUserName" class="userLink">-</div>
+          <div class="topButtons">
+            <button id="adminBtn" class="btn hidden" type="button">Admin</button>
+            <button id="logoutBtn" class="btn" type="button">Abmelden</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <section class="panel">
-      <div class="panelTitle">Action</div>
-
-      <!-- MODE SELECT (initial view) -->
-      <div id="modeSelectRow" class="modeSelectRow">
-        <button id="modeLoad" class="modeBtn" type="button">LOAD</button>
-        <button id="modeTake" class="modeBtn" type="button">TAKE</button>
-      </div>
-
-      <!-- MODE TITLE (after selection) -->
-      <div id="modeTitleRow" class="modeTitleRow">
-        <button id="modeBack" class="btn" type="button">Back</button>
-        <h2 id="modeTitle" class="modeTitle">LOAD</h2>
-        <div class="spacer"></div>
-      </div>
-
-      <!-- ACTION FORM -->
-      <div id="actionBody">
-        <div class="grid">
-          <label>Worker</label>
-          <select id="workerSelect" class="input">
-            <option value="" selected disabled>Select worker</option>
-          </select>
-
-          <label>Product</label>
-          <div>
-            <div class="row">
-              <select id="productSelect" class="input" style="flex:1;">
-                <option value="" selected disabled>Select product</option>
-              </select>
-            </div>
-
-            <div class="orText" style="margin:10px 0;">or</div>
-
-            <div class="row">
-              <button id="qrScanBtn" class="btn primary" type="button">SCAN</button>
-              <button id="qrStopBtn" class="btn" type="button" style="display:none;">Stop</button>
-            </div>
-
-            <div id="qrScanBox" style="display:none; margin-top:10px;">
-              <div id="qrReader" style="width:100%; max-width:520px;"></div>
-              <div class="scannerHint">Point the camera at the QR</div>
-            </div>
-          </div>
-
-
-          <label>Quantity</label>
-          <input id="qty" class="input" type="number" min="1" step="1" value="1" />
+      <div class="panelBody">
+        <div class="scanRow">
+          <button id="qrScanBtn" class="btn primary" type="button">Scannen</button>
+          <button id="qrStopBtn" class="btn" type="button" style="display:none;">Stopp</button>
         </div>
 
-        <div class="row">
-          <button id="takeBtn" class="btn primary" type="button" style="display:none;">TAKE</button>
-          <button id="loadBtn" class="btn primary" type="button" style="display:none;">LOAD</button>
+        <div id="qrScanBox">
+          <div id="qrReader"></div>
+          <div class="scannerHint">Kamera auf den QR-Code richten</div>
+        </div>
+
+        <div id="actionRow" class="actionRow">
+          <button id="modeLoad" class="actionBtn" type="button">Einlagern</button>
+          <button id="modeTake" class="actionBtn" type="button">Entnehmen</button>
+        </div>
+
+        <div id="confirmBox" class="confirmBox">
+          <div class="confirmTitle">Eintrag prüfen</div>
+
+          <div class="confirmGrid">
+            <div class="confirmLabel">Mitarbeiter</div>
+            <div id="confirmWorker" class="confirmValue">-</div>
+
+            <div class="confirmLabel">Aktion</div>
+            <div id="confirmAction" class="confirmValue">-</div>
+
+            <div class="confirmLabel">Lager</div>
+            <div id="confirmLager" class="confirmValue">-</div>
+
+            <div class="confirmLabel">Produkt-ID</div>
+            <div id="confirmProductId" class="confirmValue">-</div>
+
+            <div class="confirmLabel">Produkt</div>
+            <div id="confirmProductName" class="confirmValue">-</div>
+
+            <div class="confirmLabel">NC Nummer</div>
+            <div id="confirmNcNummer" class="confirmValue">-</div>
+          </div>
+
+          <div class="qtyRow">
+            <label for="qty" class="confirmLabel">Menge</label>
+            <input id="qty" class="input" type="number" min="1" step="1" value="1" />
+          </div>
+
+          <div class="confirmActions">
+            <button id="confirmBtn" class="btn primary" type="button">Bestätigen</button>
+            <button id="resetBtn" class="btn" type="button">Zurücksetzen</button>
+          </div>
         </div>
 
         <div id="msg" class="msg"></div>
@@ -118,120 +276,100 @@
     </section>
 
     <section class="panel">
-      <div class="panelTitle">Current stock</div>
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th class="right">Qty</th>
-            </tr>
-          </thead>
-          <tbody id="stockBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panelTitle">Admin</div>
-
-      <button id="openAdmin" class="btn" type="button">Change workers/products</button>
-
-      <div id="adminGate" class="adminGate" style="display:none;">
-        <div class="row">
-          <input id="adminToken" class="input" type="password" placeholder="Admin token" />
-          <button id="adminLogin" class="btn primary" type="button">Unlock</button>
-          <button id="adminLogout" class="btn" type="button">Lock</button>
+      <div class="panelBody">
+        <div class="stockTools">
+          <button id="stockScanBtn" class="btn" type="button">Scan</button>
+          <input id="stockSearch" class="input stockSearch" type="text" placeholder="Suche nach Produkt oder ID" />
+          <button id="stockClearBtn" class="btn" type="button">Zurücksetzen</button>
         </div>
 
-        <div id="adminMsg" class="msg"></div>
+        <div id="stockQrScanBox">
+          <div id="stockQrReader"></div>
+          <div class="scannerHint">Kamera auf den QR-Code richten</div>
+        </div>
 
-        <div id="adminPanel" style="display:none;">
-          <div class="divider"></div>
-
-          <div class="adminBlockTitle">Workers</div>
-
-          <div class="grid">
-            <label>Add worker</label>
-            <div class="row">
-              <input id="wAddName" class="input" type="text" placeholder="New name" />
-              <button id="wAddBtn" class="btn primary" type="button">Add</button>
-            </div>
-
-            <label>Rename worker</label>
-            <div class="row">
-              <select id="wRenameSelect" class="input"></select>
-              <input id="wRenameName" class="input" type="text" placeholder="New name" />
-              <button id="wRenameBtn" class="btn primary" type="button">Rename</button>
-            </div>
-
-            <label>Remove worker</label>
-            <div class="row">
-              <select id="wRemoveSelect" class="input"></select>
-              <button id="wRemoveBtn" class="btn primary" type="button">Remove</button>
-            </div>
-
-            <label>Reactivate worker</label>
-            <div class="row">
-              <select id="wReactivateSelect" class="input"></select>
-              <button id="wReactivateBtn" class="btn primary" type="button">Reactivate</button>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="adminBlockTitle">Products</div>
-
-          <div class="grid">
-            <label>Add product</label>
-            <div>
-              <div class="grid" style="grid-template-columns: 180px 1fr;">
-                <div>Category</div>
-                <select id="pAddKind" class="input">
-                  <option value="" selected disabled>Select</option>
-                  <option value="netcom">Netcom Produkte</option>
-                  <option value="werkzeug">Werkzeug</option>
-                </select>
-              </div>
-
-              <div id="pAddNetcomFields" style="display:none; margin-top: 10px;">
-                <div class="grid" style="grid-template-columns: 180px 1fr;">
-                  <div>NC Nummer</div>
-                  <input id="pAddNc" class="input" type="text" placeholder="NC Nummer" />
-
-                  <div>Materialkurztext</div>
-                  <input id="pAddMk" class="input" type="text" placeholder="Materialkurztext" />
-                </div>
-              </div>
-
-              <div id="pAddWerkzeugFields" style="display:none; margin-top: 10px;">
-                <div class="grid" style="grid-template-columns: 180px 1fr;">
-                  <div>Produkt Name</div>
-                  <input id="pAddPn" class="input" type="text" placeholder="Produkt Name" />
-                </div>
-              </div>
-
-              <div class="row" style="margin-top: 10px;">
-                <button id="pAddBtn" class="btn primary" type="button">Add</button>
-              </div>
-            </div>
-
-            <label>Remove product</label>
-            <div class="row">
-              <select id="pRemoveSelect" class="input"></select>
-              <button id="pRemoveBtn" class="btn primary" type="button">Remove</button>
-            </div>
-          </div>
-
+        <div class="tableWrap" style="margin-top:14px;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Produkt</th>
+                <th class="right">Konstanz</th>
+                <th class="right">Sindelfingen</th>
+                <th class="right">Gesamt</th>
+              </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+          </table>
         </div>
       </div>
     </section>
   </main>
 
+  <div id="passwordModal" class="modalWrap">
+    <div class="modalCard">
+      <div class="modalHeader">Passwort ändern</div>
+      <div class="modalBody">
+        <div class="passwordGrid">
+          <div class="confirmLabel">Altes Passwort</div>
+          <input id="oldPassword" class="input" type="password" placeholder="Altes Passwort" />
+
+          <div class="confirmLabel">Neues Passwort</div>
+          <input id="newPassword" class="input" type="password" placeholder="Neues Passwort" />
+        </div>
+
+        <div class="modalActions">
+          <button id="savePasswordBtn" class="btn primary" type="button">Speichern</button>
+          <button id="closePasswordBtn" class="btn" type="button">Schließen</button>
+        </div>
+
+        <div id="passwordMsg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="./api.js"></script>
-  <script src="./take_load.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="./qr.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./take_load.js"></script>
+
+  <script>
+    const userRaw = localStorage.getItem("lager_user");
+    const token = localStorage.getItem("lager_token");
+    const currentUserName = document.getElementById("currentUserName");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminBtn = document.getElementById("adminBtn");
+
+    if (!token || !userRaw) {
+      location.href = "./index.html";
+    }
+
+    if (userRaw) {
+      try {
+        const user = JSON.parse(userRaw);
+        const first = user.first_name || "";
+        const last = user.last_name || "";
+        const username = user.username || "";
+        currentUserName.textContent = [first, last].join(" ").trim() || username || "-";
+
+        if (user.is_admin && adminBtn) {
+          adminBtn.classList.remove("hidden");
+        }
+      } catch {
+        currentUserName.textContent = "-";
+      }
+    }
+
+    if (adminBtn) {
+      adminBtn.addEventListener("click", () => {
+        location.href = "./admin.html";
+      });
+    }
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("lager_token");
+      localStorage.removeItem("lager_user");
+      location.href = "./index.html";
+    });
+  </script>
 </body>
 </html>
