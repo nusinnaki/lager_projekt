@@ -1,240 +1,142 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Lager</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lager Login</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <style>
+    * { box-sizing: border-box; }
 
-<style>
-*{box-sizing:border-box}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
 
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#fff;
-color:#111;
-min-height:100vh;
-display:flex;
-align-items:flex-start;
-justify-content:center;
-}
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 18px auto 40px;
+      padding: 0 16px;
+    }
 
-.page{
-width:100%;
-max-width:1100px;
-margin:18px auto 40px;
-padding:0 16px;
-}
+    .titleRow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 12px 0 22px;
+    }
 
-.titleRow{
-display:flex;
-align-items:center;
-justify-content:center;
-gap:16px;
-margin:12px 0 22px;
-}
+    .titleRow h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
 
-.titleRow h1{
-margin:0;
-font-size:34px;
-font-weight:700;
-letter-spacing:.5px;
-}
+    .titleRow img {
+      height: 64px;
+      width: auto;
+      position: relative;
+      top: 6px;
+    }
 
-.titleRow img{
-height:64px;
-width:auto;
-position:relative;
-top:6px;
-}
+    .loginWrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
 
-.loginWrap{
-display:flex;
-justify-content:center;
-margin-top:30px;
-}
+    .loginCard {
+      width: 100%;
+      max-width: 420px;
+      background: #f3f3f3;
+      border: 1px solid #d5d5d5;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    }
 
-.loginCard{
-width:100%;
-max-width:420px;
-background:#f3f3f3;
-border:1px solid #d5d5d5;
-border-radius:16px;
-overflow:hidden;
-box-shadow:0 8px 18px rgba(0,0,0,.06);
-}
+    .loginHeader {
+      padding: 12px 14px;
+      font-weight: 700;
+      border-bottom: 1px solid #d5d5d5;
+      background: #f8f8f8;
+    }
 
-.loginHeader{
-padding:12px 14px;
-font-weight:700;
-border-bottom:1px solid #d5d5d5;
-background:#f8f8f8;
-}
+    .loginBody {
+      padding: 16px;
+    }
 
-.loginBody{
-padding:16px;
-}
+    .loginGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
 
-.loginGrid{
-display:grid;
-grid-template-columns:1fr;
-gap:12px;
-}
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
 
-input{
-width:100%;
-padding:10px 12px;
-border:1px solid #ccc;
-border-radius:8px;
-font:inherit;
-background:#fff;
-}
+    .msg {
+      margin-top: 10px;
+      min-height: 18px;
+      font-size: 14px;
+    }
 
-.actions{
-display:flex;
-gap:10px;
-margin-top:16px;
-}
-
-button{
-padding:10px 14px;
-border:1px solid #333;
-background:#fff;
-cursor:pointer;
-border-radius:8px;
-font:inherit;
-}
-
-button.primary{
-background:#111;
-color:#fff;
-}
-
-button:disabled{
-opacity:.6;
-cursor:not-allowed;
-}
-
-.msg{
-margin-top:10px;
-min-height:18px;
-font-size:14px;
-}
-
-@media(max-width:900px){
-.titleRow h1{font-size:28px}
-.titleRow img{height:54px}
-}
-</style>
+    @media (max-width: 900px) {
+      .titleRow h1 { font-size: 28px; }
+      .titleRow img { height: 54px; }
+    }
+  </style>
 </head>
 
 <body>
+  <main class="page">
+    <header class="titleRow">
+      <h1>Lager</h1>
+      <img src="/assets/images/logo.png" alt="POPSITE Logo" />
+    </header>
 
-<main class="page">
+    <section class="loginWrap">
+      <div class="loginCard">
+        <div class="loginHeader">Login</div>
+        <div class="loginBody">
+          <form id="login-form">
+            <div class="loginGrid">
+              <div>
+                <input id="usernameInput" type="text" placeholder="Username" autocomplete="username" />
+              </div>
 
-<header class="titleRow">
-<h1>Lager</h1>
-<img src="assets/logo.png" alt="POPSITE Logo"/>
-</header>
+              <div>
+                <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" />
+              </div>
+            </div>
 
-<section class="loginWrap">
-  <div class="loginCard">
-    <div class="loginHeader">Login</div>
-    <div class="loginBody">
+            <div class="actions">
+              <button id="loginBtn" class="primary" type="submit">Login</button>
+            </div>
+          </form>
 
-      <div class="loginGrid">
-        <div>
-          <input id="usernameInput" type="text" placeholder="Username" autocomplete="username">
-        </div>
-
-        <div>
-          <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password">
+          <div id="loginMsg" class="msg"></div>
         </div>
       </div>
+    </section>
+  </main>
 
-      <div class="actions">
-        <button id="loginBtn" class="primary">Login</button>
-      </div>
-
-      <div id="loginMsg" class="msg"></div>
-    </div>
-  </div>
-</section>
-
-</main>
-
-<script>
-const API = "http://127.0.0.1:8000/api";
-
-const usernameInput = document.getElementById("usernameInput");
-const passwordInput = document.getElementById("passwordInput");
-const loginBtn = document.getElementById("loginBtn");
-const loginMsg = document.getElementById("loginMsg");
-
-function clearSession(){
-  localStorage.removeItem("lager_token");
-  localStorage.removeItem("lager_user");
-}
-
-async function login(){
-  const username = usernameInput.value.trim().toLowerCase();
-  const password = passwordInput.value;
-
-  if(!username){
-    loginMsg.textContent = "Enter a username.";
-    return;
-  }
-
-  if(!password){
-    loginMsg.textContent = "Enter a password.";
-    return;
-  }
-
-  loginBtn.disabled = true;
-  loginMsg.textContent = "Logging in...";
-
-  try{
-    const response = await fetch(API + "/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password
-      })
-    });
-
-    const data = await response.json();
-
-    if(!response.ok){
-      loginMsg.textContent = data.detail || "Login failed.";
-      loginBtn.disabled = false;
-      return;
-    }
-
-    localStorage.setItem("lager_token", data.access_token);
-    localStorage.setItem("lager_user", JSON.stringify(data.user));
-
-    location.href = "lager.html";
-  }catch(err){
-    console.error(err);
-    clearSession();
-    loginMsg.textContent = "Login failed.";
-    loginBtn.disabled = false;
-  }
-}
-
-loginBtn.addEventListener("click", login);
-
-usernameInput.addEventListener("keydown", e => {
-  if(e.key === "Enter") login();
-});
-
-passwordInput.addEventListener("keydown", e => {
-  if(e.key === "Enter") login();
-});
-</script>
-
+  <script src="/js/api/client.js"></script>
+  <script src="/js/api/auth.js"></script>
+  <script src="/js/pages/index.js"></script>
 </body>
 </html>

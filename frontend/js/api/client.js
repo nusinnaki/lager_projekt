@@ -1,8 +1,16 @@
 (function () {
-  const API_BASE = "http://127.0.0.1:8000/api";
+  const API_BASE = "/api";
 
   function getToken() {
     return (localStorage.getItem("lager_token") || "").trim();
+  }
+
+  function setToken(token) {
+    localStorage.setItem("lager_token", (token || "").trim());
+  }
+
+  function clearToken() {
+    localStorage.removeItem("lager_token");
   }
 
   function authHeaders(extra = {}) {
@@ -13,7 +21,7 @@
 
     const token = getToken();
     if (token) {
-      headers.Authorization = "Bearer " + token;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     return headers;
@@ -36,28 +44,31 @@
     const data = await readJsonSafe(res);
 
     if (!res.ok) {
-      const detail = data && data.detail ? data.detail : `${res.status} ${res.statusText}`;
+      const detail = data?.detail || `${res.status} ${res.statusText}`;
       throw new Error(detail);
     }
 
     return data;
   }
 
-  async function apiGet(path) {
+  async function get(path) {
     return request(path, { method: "GET" });
   }
 
-  async function apiPost(path, body) {
+  async function post(path, body) {
     return request(path, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
   }
 
   window.App = window.App || {};
-  window.App.apiGet = apiGet;
-  window.App.apiPost = apiPost;
+  window.App.api = {
+    get,
+    post,
+    getToken,
+    setToken,
+    clearToken
+  };
 })();

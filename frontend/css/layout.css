@@ -1,0 +1,53 @@
+.page-header,
+.page-section,
+.card,
+.toolbar,
+.table-wrap,
+.detail-panel {
+  margin-bottom: 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.page-header img {
+  height: 56px;
+  width: auto;
+}
+
+.card {
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

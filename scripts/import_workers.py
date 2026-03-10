@@ -6,91 +6,121 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "db" / "Lager_live.db"
-WORKERS_CSV = ROOT / "data" / "workers.csv"
+CSV_PATH = ROOT / "data" / "workers.csv"
 
 
 def norm(x: str | None) -> str:
-    return " ".join((x or "").replace("\xa0", " ").split()).strip()
-
-
-def split_name(full_name: str) -> tuple[str, str]:
-    parts = norm(full_name).split()
-    if len(parts) < 2:
-        raise ValueError(f"Cannot split worker name into first_name/last_name: {full_name!r}")
-    first_name = parts[0]
-    last_name = " ".join(parts[1:])
-    return first_name, last_name
+    return " ".join((x or "").split()).strip()
 
 
 def main() -> None:
-    if not WORKERS_CSV.exists():
-        raise SystemExit(f"workers.csv not found at {WORKERS_CSV}")
+    if not CSV_PATH.exists():
+        raise SystemExit(f"workers.csv not found: {CSV_PATH}")
 
-    if not DB_PATH.exists():
-        raise SystemExit(f"DB not found at {DB_PATH}")
-
-    con = sqlite3.connect(str(DB_PATH))
+    con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON;")
 
     inserted = 0
+    reactivated = 0
+    unchanged = 0
+    deactivated = 0
 
     try:
-        con.execute("BEGIN;")
+        con.execute("BEGIN")
 
-        # If workers already exist and logs reference them, clear logs first
-        con.execute("DELETE FROM logs;")
-        con.execute("DELETE FROM workers;")
-
-        with WORKERS_CSV.open("r", encoding="utf-8-sig", newline="") as f:
+        with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as f:
             reader = csv.DictReader(f)
-            if not reader.fieldnames:
-                raise SystemExit("workers.csv has no header")
 
-            headers = {h.strip().lower(): h.strip() for h in reader.fieldnames if h}
+            if reader.fieldnames != ["first_name", "last_name"]:
+                raise SystemExit("workers.csv must have header: first_name,last_name")
 
-            k_first = headers.get("first_name") or headers.get("firstname") or headers.get("first name")
-            k_last = headers.get("last_name") or headers.get("lastname") or headers.get("last name")
-            k_name = headers.get("name")
-
-            if not ((k_first and k_last) or k_name):
-                raise SystemExit(
-                    "workers.csv must contain either:\n"
-                    "- first_name,last_name\n"
-                    "or\n"
-                    "- name"
-                )
+            csv_workers: list[tuple[str, str]] = []
 
             for row in reader:
-                if k_first and k_last:
-                    first_name = norm(row.get(k_first))
-                    last_name = norm(row.get(k_last))
-                else:
-                    full_name = norm(row.get(k_name))
-                    if not full_name:
-                        continue
-                    first_name, last_name = split_name(full_name)
+                first = norm(row["first_name"])
+                last = norm(row["last_name"])
 
-                if not first_name or not last_name:
+                if not first or not last:
                     continue
 
-                cur = con.execute(
+                csv_workers.append((first, last))
+
+        seen = set()
+        unique_csv_workers: list[tuple[str, str]] = []
+        for worker in csv_workers:
+            if worker not in seen:
+                seen.add(worker)
+                unique_csv_workers.append(worker)
+
+        for first, last in unique_csv_workers:
+            existing = con.execute(
+                """
+                SELECT id, active
+                FROM workers
+                WHERE first_name = ? AND last_name = ?
+                """,
+                (first, last),
+            ).fetchone()
+
+            if existing:
+                if int(existing["active"]) != 1:
+                    con.execute(
+                        """
+                        UPDATE workers
+                        SET active = 1
+                        WHERE id = ?
+                        """,
+                        (existing["id"],),
+                    )
+                    reactivated += 1
+                else:
+                    unchanged += 1
+            else:
+                con.execute(
                     """
                     INSERT INTO workers(first_name, last_name, active)
                     VALUES (?, ?, 1)
                     """,
-                    (first_name, last_name),
+                    (first, last),
                 )
-                inserted += cur.rowcount
+                inserted += 1
+
+        csv_name_set = set(unique_csv_workers)
+
+        db_workers = con.execute(
+            """
+            SELECT id, first_name, last_name, active
+            FROM workers
+            """
+        ).fetchall()
+
+        for row in db_workers:
+            key = (row["first_name"], row["last_name"])
+            if key not in csv_name_set and int(row["active"]) != 0:
+                con.execute(
+                    """
+                    UPDATE workers
+                    SET active = 0
+                    WHERE id = ?
+                    """,
+                    (row["id"],),
+                )
+                deactivated += 1
 
         con.commit()
-        print(f"OK: inserted {inserted} workers")
 
     except Exception:
         con.rollback()
         raise
+
     finally:
         con.close()
+
+    print(f"Inserted new workers: {inserted}")
+    print(f"Reactivated workers: {reactivated}")
+    print(f"Unchanged active workers: {unchanged}")
+    print(f"Deactivated missing workers: {deactivated}")
 
 
 if __name__ == "__main__":

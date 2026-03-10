@@ -4,11 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Lager</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
 
   <style>
     body { background: #fff; }
-    .panel { background: #eee; }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 18px auto 40px;
+      padding: 0 16px;
+    }
+
+    .panel {
+      background: #eee;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panelBody {
+      padding: 16px;
+    }
 
     .topRow {
       display: flex;
@@ -38,9 +57,9 @@
       justify-content: flex-end;
     }
 
-    .scanRow,
-    .actionRow,
-    .stockTools {
+    .modeRow,
+    .stockTools,
+    .confirmActions {
       display: flex;
       gap: 10px;
       margin-top: 14px;
@@ -48,8 +67,8 @@
       align-items: center;
     }
 
-    .actionRow {
-      display: none;
+    .hidden {
+      display: none !important;
     }
 
     .actionBtn {
@@ -64,16 +83,31 @@
       cursor: pointer;
     }
 
-    .actionBtn:hover {
-      background: rgba(0,0,0,.04);
-    }
-
     .actionBtn.active {
       background: #111;
       color: #fff;
       border-color: #111;
     }
 
+    #qrScanBox,
+    #stockQrScanBox {
+      display: none;
+      margin-top: 14px;
+    }
+
+    #qrReader,
+    #stockQrReader {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .scannerHint {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .manualBox,
     .confirmBox {
       display: none;
       margin-top: 16px;
@@ -89,6 +123,7 @@
     }
 
     .confirmGrid,
+    .manualGrid,
     .passwordGrid {
       display: grid;
       grid-template-columns: 160px 1fr;
@@ -112,38 +147,39 @@
       max-width: 140px;
     }
 
-    .confirmActions {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    #qrScanBox,
-    #stockQrScanBox {
-      display: none;
-      margin-top: 14px;
-    }
-
-    #qrReader,
-    #stockQrReader {
-      width: 100%;
-      max-width: 520px;
-    }
-
-    .scannerHint {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #444;
-    }
-
     .stockSearch {
       flex: 1;
       min-width: 220px;
     }
 
-    .hidden {
-      display: none !important;
+    .tableWrap {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    .table th,
+    .table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e5e5;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th.right,
+    .table td.right {
+      text-align: right;
+    }
+
+    .msg {
+      margin-top: 10px;
+      min-height: 18px;
+      font-size: 14px;
     }
 
     .modalWrap {
@@ -185,6 +221,7 @@
 
     @media (max-width: 760px) {
       .confirmGrid,
+      .manualGrid,
       .passwordGrid {
         grid-template-columns: 1fr;
       }
@@ -213,8 +250,8 @@
         <div class="userBox">
           <div id="currentUserName" class="userLink">-</div>
           <div class="topButtons">
-            <button id="adminBtn" class="btn hidden" type="button">Admin</button>
-            <button id="logoutBtn" class="btn" type="button">Abmelden</button>
+            <button id="adminBtn" class="hidden" type="button">Admin</button>
+            <button id="logoutBtn" type="button">Abmelden</button>
           </div>
         </div>
       </div>
@@ -222,9 +259,11 @@
 
     <section class="panel">
       <div class="panelBody">
-        <div class="scanRow">
-          <button id="qrScanBtn" class="btn primary" type="button">Scannen</button>
-          <button id="qrStopBtn" class="btn" type="button" style="display:none;">Stopp</button>
+        <div class="confirmTitle">Produkt bearbeiten</div>
+
+        <div class="modeRow">
+          <button id="chooseScanBtn" class="primary" type="button">Scannen</button>
+          <button id="chooseManualBtn" type="button">Manuell</button>
         </div>
 
         <div id="qrScanBox">
@@ -232,7 +271,36 @@
           <div class="scannerHint">Kamera auf den QR-Code richten</div>
         </div>
 
-        <div id="actionRow" class="actionRow">
+        <div id="manualBox" class="manualBox">
+          <div class="confirmTitle">Manuelle Buchung</div>
+
+          <div class="manualGrid">
+            <div class="confirmLabel">Lager</div>
+            <select id="manualSite">
+              <option value="konstanz">Konstanz</option>
+              <option value="sindelfingen">Sindelfingen</option>
+            </select>
+
+            <div class="confirmLabel">Produkt-ID</div>
+            <input id="manualProductId" type="number" min="1" step="1" placeholder="Produkt-ID" />
+
+            <div class="confirmLabel">Aktion</div>
+            <select id="manualAction">
+              <option value="load">Einlagern</option>
+              <option value="take">Entnehmen</option>
+            </select>
+
+            <div class="confirmLabel">Menge</div>
+            <input id="manualQty" type="number" min="1" step="1" value="1" />
+          </div>
+
+          <div class="confirmActions">
+            <button id="manualConfirmBtn" class="primary" type="button">Bestätigen</button>
+            <button id="manualResetBtn" type="button">Zurücksetzen</button>
+          </div>
+        </div>
+
+        <div id="actionRow" class="modeRow hidden">
           <button id="modeLoad" class="actionBtn" type="button">Einlagern</button>
           <button id="modeTake" class="actionBtn" type="button">Entnehmen</button>
         </div>
@@ -258,16 +326,19 @@
 
             <div class="confirmLabel">NC Nummer</div>
             <div id="confirmNcNummer" class="confirmValue">-</div>
+
+            <div class="confirmLabel">Aktueller Bestand</div>
+            <div id="confirmCurrentQty" class="confirmValue">-</div>
           </div>
 
           <div class="qtyRow">
             <label for="qty" class="confirmLabel">Menge</label>
-            <input id="qty" class="input" type="number" min="1" step="1" value="1" />
+            <input id="qty" type="number" min="1" step="1" value="1" />
           </div>
 
           <div class="confirmActions">
-            <button id="confirmBtn" class="btn primary" type="button">Bestätigen</button>
-            <button id="resetBtn" class="btn" type="button">Zurücksetzen</button>
+            <button id="confirmBtn" class="primary" type="button">Bestätigen</button>
+            <button id="resetBtn" type="button">Zurücksetzen</button>
           </div>
         </div>
 
@@ -277,10 +348,12 @@
 
     <section class="panel">
       <div class="panelBody">
+        <div class="confirmTitle">Aktueller Lagerbestand</div>
+
         <div class="stockTools">
-          <button id="stockScanBtn" class="btn" type="button">Scan</button>
-          <input id="stockSearch" class="input stockSearch" type="text" placeholder="Suche nach Produkt oder ID" />
-          <button id="stockClearBtn" class="btn" type="button">Zurücksetzen</button>
+          <button id="stockScanBtn" type="button">Scan</button>
+          <input id="stockSearch" class="stockSearch" type="text" placeholder="Suche nach Produkt oder ID" />
+          <button id="stockClearBtn" type="button">Zurücksetzen</button>
         </div>
 
         <div id="stockQrScanBox">
@@ -288,7 +361,7 @@
           <div class="scannerHint">Kamera auf den QR-Code richten</div>
         </div>
 
-        <div class="tableWrap" style="margin-top:14px;">
+        <div class="tableWrap">
           <table class="table">
             <thead>
               <tr>
@@ -312,15 +385,15 @@
       <div class="modalBody">
         <div class="passwordGrid">
           <div class="confirmLabel">Altes Passwort</div>
-          <input id="oldPassword" class="input" type="password" placeholder="Altes Passwort" />
+          <input id="oldPassword" type="password" placeholder="Altes Passwort" />
 
           <div class="confirmLabel">Neues Passwort</div>
-          <input id="newPassword" class="input" type="password" placeholder="Neues Passwort" />
+          <input id="newPassword" type="password" placeholder="Neues Passwort" />
         </div>
 
         <div class="modalActions">
-          <button id="savePasswordBtn" class="btn primary" type="button">Speichern</button>
-          <button id="closePasswordBtn" class="btn" type="button">Schließen</button>
+          <button id="savePasswordBtn" class="primary" type="button">Speichern</button>
+          <button id="closePasswordBtn" type="button">Schließen</button>
         </div>
 
         <div id="passwordMsg" class="msg"></div>
@@ -328,48 +401,16 @@
     </div>
   </div>
 
-  <script src="./api.js"></script>
+  <script src="/js/api/client.js"></script>
+  <script src="/js/api/auth.js"></script>
+  <script src="/js/api/products.js"></script>
+  <script src="/js/api/stock.js"></script>
+  <script src="/js/api/admin.js"></script>
+  <script src="/js/api/history.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="./take_load.js"></script>
-
-  <script>
-    const userRaw = localStorage.getItem("lager_user");
-    const token = localStorage.getItem("lager_token");
-    const currentUserName = document.getElementById("currentUserName");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const adminBtn = document.getElementById("adminBtn");
-
-    if (!token || !userRaw) {
-      location.href = "./index.html";
-    }
-
-    if (userRaw) {
-      try {
-        const user = JSON.parse(userRaw);
-        const first = user.first_name || "";
-        const last = user.last_name || "";
-        const username = user.username || "";
-        currentUserName.textContent = [first, last].join(" ").trim() || username || "-";
-
-        if (user.is_admin && adminBtn) {
-          adminBtn.classList.remove("hidden");
-        }
-      } catch {
-        currentUserName.textContent = "-";
-      }
-    }
-
-    if (adminBtn) {
-      adminBtn.addEventListener("click", () => {
-        location.href = "./admin.html";
-      });
-    }
-
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("lager_token");
-      localStorage.removeItem("lager_user");
-      location.href = "./index.html";
-    });
-  </script>
+  <script src="/js/features/qr-scan.js"></script>
+  <script src="/js/features/traffic-lights.js"></script>
+  <script src="/js/features/stock-table.js"></script>
+  <script src="/js/pages/lager.js"></script>
 </body>
 </html>
