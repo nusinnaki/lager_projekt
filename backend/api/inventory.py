@@ -5,6 +5,7 @@ from backend.logic.auth import get_current_user
 from backend.logic.sites import lager_id_from_site
 from backend.logic.stock import act
 from backend.models.inventory import ActionIn
+from backend.repo.logs import list_logs
 from backend.repo.products import list_products
 from backend.repo.stock import list_stock_combined, list_stock_for_lager
 from backend.repo.workers import list_workers
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/api", tags=["inventory"])
 
 
 @router.get("/resolve")
-def resolve(code: str) -> dict:
+def resolve(code: str, current_user: dict = Depends(get_current_user)) -> dict:
     try:
         lager_id_str, product_id_str = code.split("-")
         lager_id = int(lager_id_str)
@@ -56,6 +57,23 @@ def resolve(code: str) -> dict:
         "nc_nummer": product["nc_nummer"],
         "quantity": qty,
     }
+
+
+@router.get("/logs")
+def api_logs(
+    limit: int = 50,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user),
+) -> list[dict]:
+    if limit < 1:
+        limit = 1
+    if limit > 200:
+        limit = 200
+    if offset < 0:
+        offset = 0
+
+    with db_session() as con:
+        return list_logs(con, limit=limit, offset=offset)
 
 
 @router.get("/stock/combined")

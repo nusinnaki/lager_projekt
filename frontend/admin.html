@@ -8,24 +8,179 @@
   <link rel="stylesheet" href="/css/layout.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/admin.css" />
+
+  <style>
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+    }
+
+    .admin-list {
+      max-height: 70vh;
+      overflow: auto;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .admin-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .admin-item:hover {
+      background: #f8f8f8;
+    }
+
+    .admin-item.active {
+      background: #111;
+      color: #fff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 10px 14px;
+      align-items: center;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .section-title {
+      margin-top: 0;
+    }
+
+    @media (max-width: 900px) {
+      .admin-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container admin-panel">
+  <main class="container">
     <header class="page-header">
       <h1>Admin</h1>
     </header>
 
     <section class="card">
-      <h2>Verwaltung</h2>
-      <div class="admin-actions">
-        <button type="button">Worker</button>
-        <button type="button">Produkte</button>
-        <button type="button">Kategorien</button>
-        <button type="button">Lager</button>
-        <button type="button">Historie</button>
+      <div class="tabs">
+        <button id="tabUsers" class="primary" type="button">User</button>
+        <button id="tabCategories" type="button">Kategorien</button>
+        <button id="tabProducts" type="button">Produkte</button>
+        <button id="backToLagerBtn" type="button">Zurück zu Lager</button>
+      </div>
+      <div id="adminMsg" class="msg"></div>
+    </section>
+
+    <section id="usersSection" class="card">
+      <h2 class="section-title">User</h2>
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Admin</th>
+              <th>Aktiv</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
       </div>
     </section>
-  </div>
+
+    <section id="categoriesSection" class="card hidden">
+      <h2 class="section-title">Kategorien</h2>
+
+      <div class="form-grid" style="margin-bottom:16px;">
+        <label for="newCategoryName">Neue Kategorie</label>
+        <input id="newCategoryName" type="text" placeholder="Kategoriename" />
+      </div>
+
+      <button id="createCategoryBtn" class="primary" type="button">Kategorie anlegen</button>
+
+      <div class="tableWrap" style="margin-top:16px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Aktiv</th>
+            </tr>
+          </thead>
+          <tbody id="categoriesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="productsSection" class="card hidden">
+      <h2 class="section-title">Produkte</h2>
+
+      <div class="admin-grid">
+        <div>
+          <input id="productSearch" type="text" placeholder="Produkt-ID oder Name suchen" style="width:100%; margin-bottom:10px;" />
+          <div id="productsList" class="admin-list"></div>
+        </div>
+
+        <div>
+          <form id="productForm">
+            <div class="form-grid">
+              <label for="productId">Produkt-ID</label>
+              <input id="productId" type="text" readonly />
+
+              <label for="productName">Produktname</label>
+              <input id="productName" type="text" />
+
+              <label for="productNc">NC Nummer</label>
+              <input id="productNc" type="text" />
+
+              <label for="productCategory">Kategorie</label>
+              <select id="productCategory"></select>
+
+              <label for="thresholdRed">Rot bis</label>
+              <input id="thresholdRed" type="number" min="0" step="1" />
+
+              <label for="thresholdYellow">Gelb bis</label>
+              <input id="thresholdYellow" type="number" min="0" step="1" />
+
+              <label for="lagerort">Lagerort</label>
+              <input id="lagerort" type="text" />
+
+              <label for="regal">Regal</label>
+              <input id="regal" type="text" />
+
+              <label for="fach">Fach</label>
+              <input id="fach" type="text" />
+
+              <label for="productActive">Aktiv</label>
+              <select id="productActive">
+                <option value="true">Ja</option>
+                <option value="false">Nein</option>
+              </select>
+            </div>
+
+            <div style="margin-top:16px;">
+              <button id="saveProductBtn" class="primary" type="submit">Produkt speichern</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <script src="/js/api/client.js"></script>
   <script src="/js/api/admin.js"></script>

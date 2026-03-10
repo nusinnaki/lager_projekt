@@ -65,6 +65,7 @@
 
   window.App = window.App || {};
   window.App.api = {
+    request,
     get,
     post,
     getToken,

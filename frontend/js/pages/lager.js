@@ -15,8 +15,19 @@
   const stockScanBtn = document.getElementById("stockScanBtn");
   const stockQrScanBox = document.getElementById("stockQrScanBox");
 
+  const showLogsBtn = document.getElementById("showLogsBtn");
+  const showStockBtn = document.getElementById("showStockBtn");
+  const stockSearch = document.getElementById("stockSearch");
+
   const manualConfirmBtn = document.getElementById("manualConfirmBtn");
   const manualResetBtn = document.getElementById("manualResetBtn");
+
+  const passwordModal = document.getElementById("passwordModal");
+  const oldPassword = document.getElementById("oldPassword");
+  const newPassword = document.getElementById("newPassword");
+  const savePasswordBtn = document.getElementById("savePasswordBtn");
+  const closePasswordBtn = document.getElementById("closePasswordBtn");
+  const passwordMsg = document.getElementById("passwordMsg");
 
   let stockQr = null;
   let stockQrRunning = false;
@@ -31,6 +42,44 @@
     if (!msg) return;
     msg.textContent = text || "";
     msg.className = type ? `msg ${type}` : "msg";
+  }
+
+  function setPasswordMessage(text, type = "") {
+    if (!passwordMsg) return;
+    passwordMsg.textContent = text || "";
+    passwordMsg.className = type ? `msg ${type}` : "msg";
+  }
+
+  function openPasswordModal() {
+    if (passwordModal) passwordModal.style.display = "block";
+    if (oldPassword) oldPassword.value = "";
+    if (newPassword) newPassword.value = "";
+    setPasswordMessage("");
+  }
+
+  function closePasswordModal() {
+    if (passwordModal) passwordModal.style.display = "none";
+    if (oldPassword) oldPassword.value = "";
+    if (newPassword) newPassword.value = "";
+    setPasswordMessage("");
+  }
+
+  function showLogsView() {
+    window.App.logsTableFeature?.showLogsView?.();
+    showLogsBtn?.classList.add("hidden");
+    showStockBtn?.classList.remove("hidden");
+    if (stockSearch) stockSearch.classList.add("hidden");
+    stockScanBtn?.classList.add("hidden");
+    stockClearBtn?.classList.add("hidden");
+  }
+
+  function showStockView() {
+    window.App.logsTableFeature?.hideLogsView?.();
+    showStockBtn?.classList.add("hidden");
+    showLogsBtn?.classList.remove("hidden");
+    if (stockSearch) stockSearch.classList.remove("hidden");
+    stockScanBtn?.classList.remove("hidden");
+    stockClearBtn?.classList.remove("hidden");
   }
 
   if (!token || !userRaw) {
@@ -52,6 +101,37 @@
     redirectToLogin();
     return;
   }
+
+  currentUserName?.addEventListener("click", openPasswordModal);
+
+  savePasswordBtn?.addEventListener("click", async () => {
+    const current_password = oldPassword?.value || "";
+    const new_password = newPassword?.value || "";
+
+    if (!current_password) {
+      setPasswordMessage("Altes Passwort fehlt.", "error");
+      return;
+    }
+
+    if (!new_password || new_password.length < 8) {
+      setPasswordMessage("Neues Passwort muss mindestens 8 Zeichen haben.", "error");
+      return;
+    }
+
+    try {
+      await window.App.authApi.changePassword(current_password, new_password);
+      setPasswordMessage("Passwort erfolgreich geändert.", "success");
+      setTimeout(closePasswordModal, 800);
+    } catch (err) {
+      setPasswordMessage(err.message || "Passwort konnte nicht geändert werden.", "error");
+    }
+  });
+
+  closePasswordBtn?.addEventListener("click", closePasswordModal);
+
+  passwordModal?.addEventListener("click", (e) => {
+    if (e.target === passwordModal) closePasswordModal();
+  });
 
   adminBtn?.addEventListener("click", () => {
     window.location.href = "/admin";
@@ -80,6 +160,21 @@
 
   chooseScanBtn?.addEventListener("click", showScanMode);
   chooseManualBtn?.addEventListener("click", showManualMode);
+
+  showLogsBtn?.addEventListener("click", async () => {
+    try {
+      await window.App.logsTableFeature.loadLogs(0);
+      showLogsView();
+      setMessage("");
+    } catch (err) {
+      setMessage(err.message || "Logs konnten nicht geladen werden.", "error");
+    }
+  });
+
+  showStockBtn?.addEventListener("click", () => {
+    showStockView();
+    setMessage("");
+  });
 
   stockClearBtn?.addEventListener("click", async () => {
     window.App.stockTableFeature?.clearStockFilter?.();
@@ -200,7 +295,9 @@
 
   window.App.qrScanFeature?.initQrScan?.();
   window.App.stockTableFeature?.initStockTable?.();
+  window.App.logsTableFeature?.initLogsTable?.();
 
   showScanMode();
+  showStockView();
   window.App.stockTableFeature?.loadCombinedStock?.().catch(console.error);
 })();

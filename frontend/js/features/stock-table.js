@@ -20,6 +20,8 @@
     rows.forEach((row) => {
       const tr = document.createElement("tr");
       tr.setAttribute("data-stock-row", "1");
+      tr.setAttribute("data-product-id", String(row.product_id || ""));
+      tr.setAttribute("data-product-name", String(row.product_name || "").toLowerCase());
 
       const qtyKonstanz = Number(row.qty_konstanz || 0);
       const qtySindelfingen = Number(row.qty_sindelfingen || 0);
@@ -43,12 +45,25 @@
   }
 
   function filterStock() {
-    const value = (stockSearch()?.value || "").trim();
+    const value = (stockSearch()?.value || "").trim().toLowerCase();
 
     document.querySelectorAll("[data-stock-row]").forEach((row) => {
-      const firstCell = row.querySelector("td");
-      const productId = (firstCell?.textContent || "").trim();
-      row.style.display = !value || productId === value ? "" : "none";
+      const productName = (row.getAttribute("data-product-name") || "").trim().toLowerCase();
+
+      const matches =
+        !value ||
+        productName.includes(value);
+
+      row.style.display = matches ? "" : "none";
+    });
+  }
+
+  function filterStockByExactId(productId) {
+    const exact = String(productId || "").trim();
+
+    document.querySelectorAll("[data-stock-row]").forEach((row) => {
+      const rowProductId = (row.getAttribute("data-product-id") || "").trim();
+      row.style.display = !exact || rowProductId === exact ? "" : "none";
     });
   }
 
@@ -62,7 +77,7 @@
     const input = stockSearch();
     if (!input) return;
     input.value = String(productId || "").trim();
-    filterStock();
+    filterStockByExactId(productId);
   }
 
   function initStockTable() {
@@ -74,6 +89,7 @@
     renderStockRows,
     loadCombinedStock,
     filterStock,
+    filterStockByExactId,
     clearStockFilter,
     setStockFilter,
     initStockTable

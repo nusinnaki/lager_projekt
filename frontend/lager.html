@@ -59,7 +59,8 @@
 
     .modeRow,
     .stockTools,
-    .confirmActions {
+    .confirmActions,
+    .logsPager {
       display: flex;
       gap: 10px;
       margin-top: 14px;
@@ -354,6 +355,8 @@
           <button id="stockScanBtn" type="button">Scan</button>
           <input id="stockSearch" class="stockSearch" type="text" placeholder="Suche nach Produkt oder ID" />
           <button id="stockClearBtn" type="button">Zurücksetzen</button>
+          <button id="showLogsBtn" type="button">Logs</button>
+          <button id="showStockBtn" class="hidden" type="button">Bestand</button>
         </div>
 
         <div id="stockQrScanBox">
@@ -361,7 +364,7 @@
           <div class="scannerHint">Kamera auf den QR-Code richten</div>
         </div>
 
-        <div class="tableWrap">
+        <div id="stockTableWrap" class="tableWrap">
           <table class="table">
             <thead>
               <tr>
@@ -374,6 +377,30 @@
             </thead>
             <tbody id="stockBody"></tbody>
           </table>
+        </div>
+
+        <div id="logsTableWrap" class="tableWrap hidden">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Zeit</th>
+                <th>Aktion</th>
+                <th>Produkt-ID</th>
+                <th>Produkt</th>
+                <th>Menge</th>
+                <th>Lager</th>
+                <th>Mitarbeiter</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+
+        <div id="logsPager" class="logsPager hidden">
+          <button id="logsPrevBtn" type="button">Vorherige</button>
+          <button id="logsNextBtn" type="button">Nächste</button>
+          <span id="logsPageInfo"></span>
         </div>
       </div>
     </section>
@@ -411,6 +438,7 @@
   <script src="/js/features/qr-scan.js"></script>
   <script src="/js/features/traffic-lights.js"></script>
   <script src="/js/features/stock-table.js"></script>
+  <script src="/js/features/logs-table.js"></script>
   <script src="/js/pages/lager.js"></script>
 </body>
 </html>
