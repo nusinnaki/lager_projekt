@@ -8,66 +8,6 @@
   <link rel="stylesheet" href="/css/layout.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/admin.css" />
-
-  <style>
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 16px;
-    }
-
-    .admin-list {
-      max-height: 70vh;
-      overflow: auto;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      background: #fff;
-    }
-
-    .admin-item {
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-    }
-
-    .admin-item:hover {
-      background: #f8f8f8;
-    }
-
-    .admin-item.active {
-      background: #111;
-      color: #fff;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: 10px 14px;
-      align-items: center;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .section-title {
-      margin-top: 0;
-    }
-
-    @media (max-width: 900px) {
-      .admin-grid,
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
 <body>
   <main class="container">
@@ -77,25 +17,76 @@
 
     <section class="card">
       <div class="tabs">
-        <button id="tabUsers" class="primary" type="button">User</button>
-        <button id="tabCategories" type="button">Kategorien</button>
+        <button id="tabUsers" class="primary" type="button">Mitarbeiter</button>
         <button id="tabProducts" type="button">Produkte</button>
+        <button id="tabSites" type="button">Sites</button>
+        <button id="tabLogs" type="button">Logs</button>
         <button id="backToLagerBtn" type="button">Zurück zu Lager</button>
       </div>
       <div id="adminMsg" class="msg"></div>
     </section>
 
     <section id="usersSection" class="card">
-      <h2 class="section-title">User</h2>
-      <div class="tableWrap">
-        <table class="table">
+      <h2 class="section-title">Mitarbeiter</h2>
+
+      <div class="toolbar">
+        <button id="newWorkerBtn" type="button">Neuer Mitarbeiter</button>
+      </div>
+
+      <form id="workerForm" class="form-grid form-grid-wide hidden">
+        <label for="workerFirstName">Vorname</label>
+        <input id="workerFirstName" type="text" />
+
+        <label for="workerLastName">Nachname</label>
+        <input id="workerLastName" type="text" />
+
+        <label for="workerUsername">Username</label>
+        <input id="workerUsername" type="text" placeholder="wird automatisch erstellt" />
+
+
+
+        <label for="workerAdmin">Rolle</label>
+        <select id="workerAdmin">
+          <option value="false">Techniker</option>
+          <option value="true">Admin</option>
+        </select>
+
+        <label for="workerActive">Aktiv</label>
+        <select id="workerActive">
+          <option value="true">Ja</option>
+          <option value="false">Nein</option>
+        </select>
+
+        <label for="workerAuthProvider">Auth Provider</label>
+        <select id="workerAuthProvider">
+          <option value="local" selected>local</option>
+          <option value="ldap">ldap</option>
+        </select>
+
+        <label id="workerLdapDnLabel" class="hidden" for="workerLdapDn">LDAP DN</label>
+        <input id="workerLdapDn" class="hidden" type="text" />
+
+        <div></div>
+        <div class="form-actions">
+          <button id="saveWorkerBtn" class="primary" type="submit">Speichern</button>
+          <button id="cancelWorkerCreateBtn" type="button">Abbrechen</button>
+        </div>
+      </form>
+
+      <div class="toolbar">
+      </div>
+
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Username</th>
               <th>Name</th>
-              <th>Admin</th>
+              <th>Username</th>
+              <th>Passwort</th>
+              <th>Rolle</th>
               <th>Aktiv</th>
+              <th>Aktionen</th>
             </tr>
           </thead>
           <tbody id="usersBody"></tbody>
@@ -103,87 +94,138 @@
       </div>
     </section>
 
-    <section id="categoriesSection" class="card hidden">
-      <h2 class="section-title">Kategorien</h2>
+    <section id="productsSection" class="card hidden">
+      <h2 class="section-title">Produkte</h2>
 
-      <div class="form-grid" style="margin-bottom:16px;">
-        <label for="newCategoryName">Neue Kategorie</label>
-        <input id="newCategoryName" type="text" placeholder="Kategoriename" />
+      <div class="toolbar">
+        <button id="newProductBtn" type="button">Neues Produkt</button>
+</div>
+
+      <form id="productForm" class="form-grid form-grid-wide hidden">
+        <label for="productName">Produktname</label>
+        <input id="productName" type="text" />
+
+        <label for="productCategory">Kategorie</label>
+        <select id="productCategory"></select>
+
+        <label id="productCategoryNewLabel" class="hidden" for="productCategoryNew">Neue Kategorie</label>
+        <input id="productCategoryNew" class="hidden" type="text" />
+
+        <label for="productBrand">Brand</label>
+        <select id="productBrand"></select>
+
+        <label id="productBrandNewLabel" class="hidden" for="productBrandNew">Neue Brand</label>
+        <input id="productBrandNew" class="hidden" type="text" />
+
+        <label for="productActive">Aktiv</label>
+        <select id="productActive">
+          <option value="true">Ja</option>
+          <option value="false">Nein</option>
+        </select>
+
+        <label id="productNcLabel" class="hidden" for="productNc">NC Nummer</label>
+        <input id="productNc" class="hidden" type="text" />
+
+        <div></div>
+        <div class="form-actions">
+          <button id="saveProductBtn" class="primary" type="submit">Speichern</button>
+          <button id="cancelProductBtn" type="button">Abbrechen</button>
+        </div>
+      </form>
+
+      <div class="toolbar">
+        <input
+          id="productSearch"
+          type="text"
+          placeholder="Produkt, ID, NC Nummer, Kategorie oder Brand suchen"
+        />
       </div>
 
-      <button id="createCategoryBtn" class="primary" type="button">Kategorie anlegen</button>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Produktname</th>
+              <th>Kategorie</th>
+              <th>Brand</th>
+              <th>NC Nummer</th>
+              <th>Aktiv</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <div class="tableWrap" style="margin-top:16px;">
-        <table class="table">
+    <section id="sitesSection" class="card hidden">
+      <h2 class="section-title">Sites</h2>
+
+      <div class="toolbar">
+        <button id="newSiteBtn" type="button">Neue Site</button>
+      </div>
+
+      <form id="siteForm" class="form-grid form-grid-wide hidden">
+        <label for="siteName">Name</label>
+        <input id="siteName" type="text" />
+
+        <label for="siteActive">Aktiv</label>
+        <select id="siteActive">
+          <option value="true">Ja</option>
+          <option value="false">Nein</option>
+        </select>
+
+        <div></div>
+        <div class="form-actions">
+          <button id="saveSiteBtn" class="primary" type="submit">Site speichern</button>
+        </div>
+      </form>
+
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
               <th>ID</th>
               <th>Name</th>
               <th>Aktiv</th>
+              <th>Aktion</th>
             </tr>
           </thead>
-          <tbody id="categoriesBody"></tbody>
+          <tbody id="sitesBody"></tbody>
         </table>
       </div>
     </section>
 
-    <section id="productsSection" class="card hidden">
-      <h2 class="section-title">Produkte</h2>
+    <section id="logsSection" class="card hidden">
+      <h2 class="section-title">Logs</h2>
 
-      <div class="admin-grid">
-        <div>
-          <input id="productSearch" type="text" placeholder="Produkt-ID oder Name suchen" style="width:100%; margin-bottom:10px;" />
-          <div id="productsList" class="admin-list"></div>
-        </div>
-
-        <div>
-          <form id="productForm">
-            <div class="form-grid">
-              <label for="productId">Produkt-ID</label>
-              <input id="productId" type="text" readonly />
-
-              <label for="productName">Produktname</label>
-              <input id="productName" type="text" />
-
-              <label for="productNc">NC Nummer</label>
-              <input id="productNc" type="text" />
-
-              <label for="productCategory">Kategorie</label>
-              <select id="productCategory"></select>
-
-              <label for="thresholdRed">Rot bis</label>
-              <input id="thresholdRed" type="number" min="0" step="1" />
-
-              <label for="thresholdYellow">Gelb bis</label>
-              <input id="thresholdYellow" type="number" min="0" step="1" />
-
-              <label for="lagerort">Lagerort</label>
-              <input id="lagerort" type="text" />
-
-              <label for="regal">Regal</label>
-              <input id="regal" type="text" />
-
-              <label for="fach">Fach</label>
-              <input id="fach" type="text" />
-
-              <label for="productActive">Aktiv</label>
-              <select id="productActive">
-                <option value="true">Ja</option>
-                <option value="false">Nein</option>
-              </select>
-            </div>
-
-            <div style="margin-top:16px;">
-              <button id="saveProductBtn" class="primary" type="submit">Produkt speichern</button>
-            </div>
-          </form>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Zeit</th>
+              <th>Aktion</th>
+              <th>Produkt-ID</th>
+              <th>Produkt</th>
+              <th>Menge</th>
+              <th>Site</th>
+              <th>Regal</th>
+              <th>Fach</th>
+              <th>Mitarbeiter</th>
+            </tr>
+          </thead>
+          <tbody id="adminLogsBody"></tbody>
+        </table>
       </div>
     </section>
+
   </main>
 
   <script src="/js/api/client.js"></script>
   <script src="/js/api/admin.js"></script>
+  <script src="/js/api/history.js"></script>
   <script src="/js/pages/admin.js"></script>
 </body>
 </html>

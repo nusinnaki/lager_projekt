@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 import sqlite3
 
 from reportlab.lib.pagesizes import A4
@@ -14,14 +15,7 @@ import qrcode
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "db" / "Lager_live.db"
-
-OUT_KONSTANZ = ROOT / "data" / "qr_konstanz.pdf"
-OUT_SINDELFINGEN = ROOT / "data" / "qr_sindelfingen.pdf"
-
-LAGERS = [
-    (1, "Konstanz", OUT_KONSTANZ),
-    (2, "Sindelfingen", OUT_SINDELFINGEN),
-]
+OUTPUT_DIR = ROOT / "data"
 
 
 def get_conn():
@@ -30,20 +24,42 @@ def get_conn():
     return con
 
 
-def fetch_products():
+def fetch_label_rows():
     con = get_conn()
-
     rows = con.execute(
         """
-        SELECT id, kind, nc_nummer, product_name, active
-        FROM products
-        WHERE active = 1
-        ORDER BY id
+        SELECT
+          s.id AS site_id,
+          s.name AS site_name,
+          p.id AS product_id,
+          p.product_name,
+          p.nc_nummer,
+          l.id AS location_id,
+          l.shelf,
+          l.row
+        FROM sites s
+        CROSS JOIN products p
+        LEFT JOIN product_site_locations psl
+          ON psl.site_id = s.id
+         AND psl.product_id = p.id
+        LEFT JOIN locations l
+          ON l.id = psl.location_id
+         AND l.site_id = s.id
+         AND l.active = 1
+        WHERE s.active = 1
+          AND p.active = 1
+        ORDER BY s.id, p.id
         """
     ).fetchall()
-
     con.close()
     return rows
+
+
+def slugify(text: str) -> str:
+    text = (text or "").strip().lower()
+    text = re.sub(r"\s+", "_", text)
+    text = re.sub(r"[^a-z0-9_äöüß]", "", text)
+    return text or "site"
 
 
 def make_qr_image(payload: str):
@@ -51,173 +67,186 @@ def make_qr_image(payload: str):
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
         box_size=10,
-        border=2,
+        border=1,
     )
     qr.add_data(payload)
     qr.make(fit=True)
     return qr.make_image(fill_color="black", back_color="white").get_image()
 
 
-def wrap_name_fixed(text: str, max_chars: int = 10) -> list[str]:
+def string_width(c, text: str, font: str, size: int) -> float:
+    c.setFont(font, size)
+    return c.stringWidth(text, font, size)
+
+
+def ellipsize(c, text: str, font: str, size: int, max_width: float) -> str:
+    text = (text or "").strip()
+    if not text:
+        return ""
+
+    if string_width(c, text, font, size) <= max_width:
+        return text
+
+    dots = "..."
+    lo, hi = 0, len(text)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        candidate = text[:mid].rstrip() + dots
+        if string_width(c, candidate, font, size) <= max_width:
+            lo = mid + 1
+        else:
+            hi = mid
+
+    out = text[: max(0, lo - 1)].rstrip() + dots
+    while out and string_width(c, out, font, size) > max_width:
+        out = out[:-1]
+    return out
+
+
+def wrap_text(c, text: str, font: str, size: int, max_width: float, max_lines: int) -> list[str]:
     text = (text or "").strip()
     if not text:
         return []
 
-    words = text.split()
-    lines: list[str] = []
-    cur = ""
-
-    for w in words:
-        if len(w) > max_chars:
-            if cur:
-                lines.append(cur)
-                cur = ""
-            for i in range(0, len(w), max_chars):
-                lines.append(w[i:i + max_chars])
-            continue
-
-        test = w if not cur else cur + " " + w
-        if len(test) <= max_chars:
-            cur = test
-        else:
-            if cur:
-                lines.append(cur)
-            cur = w
-
-    if cur:
-        lines.append(cur)
-
-    return lines
-
-
-def wrap_text(c, text: str, font: str, size: int, width: float):
     c.setFont(font, size)
-
     words = text.split()
     lines = []
     cur = ""
 
-    for w in words:
-        test = w if not cur else cur + " " + w
-        if c.stringWidth(test, font, size) <= width:
-            cur = test
+    for i, word in enumerate(words):
+        candidate = word if not cur else f"{cur} {word}"
+        if c.stringWidth(candidate, font, size) <= max_width:
+            cur = candidate
         else:
             if cur:
                 lines.append(cur)
-            cur = w
+            cur = word
+            if len(lines) == max_lines - 1:
+                remaining = " ".join([cur] + words[i + 1:])
+                lines.append(ellipsize(c, remaining, font, size, max_width))
+                return lines
 
     if cur:
         lines.append(cur)
+
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+
+    if len(lines) == max_lines:
+        lines[-1] = ellipsize(c, lines[-1], font, size, max_width)
 
     return lines
 
 
 def draw_label(c, x, y, label_w, label_h, r):
+    site_id = int(r["site_id"])
+    product_id = int(r["product_id"])
+    payload = f"{site_id}-{product_id}"
 
-    pid = int(r["id"])
-    lager_id = r["lager_id"]
-    payload = f"{lager_id}-{pid}"
+    left = x + 3 * mm
+    top = y + label_h - 2.7 * mm
 
-    pad = 4 * mm
-    gap = 4 * mm
+    c.setFont("Helvetica", 6.8)
+    c.drawString(left, top, f"QR: {payload}")
 
-    qr_side = label_h - 2 * pad
+    qr_size = 24.5 * mm
+    qr_y = top - 1.8 * mm - qr_size
+    qr_x = left
+
     qr_img = make_qr_image(payload)
-
     c.drawImage(
         ImageReader(qr_img),
-        x + pad,
-        y + pad,
-        qr_side,
-        qr_side,
+        qr_x,
+        qr_y,
+        qr_size,
+        qr_size,
         mask="auto",
     )
 
-    text_x = x + pad + qr_side + gap
-    text_w = (x + label_w - pad) - text_x
-    top_y = y + label_h - pad
+    text_left = left
+    text_width_available = label_w - 6 * mm
 
-    name = r["product_name"] or ""
-    nc = r["nc_nummer"] or ""
+    product_line = f"{(r['product_name'] or '').strip()} {(r['site_name'] or '').strip()}".strip()
+    name_lines = wrap_text(
+        c,
+        product_line,
+        "Helvetica-Bold",
+        6.7,
+        text_width_available,
+        max_lines=3,
+    )
 
-    name_font = ("Helvetica-Bold", 9)
-    nc_font = ("Helvetica", 8)
-    site_font = ("Helvetica-Bold", 8)
+    name_y = qr_y - 2.4 * mm
+    c.setFont("Helvetica-Bold", 6.7)
+    for i, line in enumerate(name_lines):
+        c.drawString(text_left, name_y - i * 3.15 * mm, line)
 
-    name_lines = wrap_name_fixed(name, max_chars=10)
-    nc_lines = wrap_text(c, nc, nc_font[0], nc_font[1], text_w)
+    after_name_y = name_y - max(1, len(name_lines)) * 3.15 * mm - 0.6 * mm
 
-    cursor = top_y - 2.5 * mm
-    min_y = y + 16 * mm
+    nc_text = ellipsize(c, r["nc_nummer"] or "-", "Helvetica", 6.0, text_width_available)
+    c.setFont("Helvetica", 6.0)
+    c.drawString(text_left, after_name_y, nc_text)
 
-    # product name
-    c.setFont(*name_font)
-    for line in name_lines:
-        if cursor < min_y:
-            break
-        c.drawString(text_x, cursor, line)
-        cursor -= 5 * mm
+    shelf = r["shelf"]
+    row = r["row"]
+    if shelf is None or row is None:
+        loc_text = "Regal - / Fach -"
+    else:
+        loc_text = f"Regal {shelf} / Fach {row}"
 
-    # site
-    if cursor >= min_y:
-        c.setFont(*site_font)
-        c.drawString(text_x, cursor, r["lager_name"])
-        cursor -= 5 * mm
-
-    # NC number
-    c.setFont(*nc_font)
-    for line in nc_lines:
-        if cursor < y + 8 * mm:
-            break
-        c.drawString(text_x, cursor, line)
-        cursor -= 4 * mm
-
-    c.setFont("Helvetica", 8)
-    c.drawRightString(x + label_w - pad, y + pad, f"QR: {payload}")
-
-    c.setLineWidth(0.6)
-    c.rect(x, y, label_w, label_h)
+    loc_text = ellipsize(c, loc_text, "Helvetica-Bold", 6.2, text_width_available)
+    c.setFont("Helvetica-Bold", 6.2)
+    c.drawString(text_left, after_name_y - 3.7 * mm, loc_text)
 
 
-def generate_for_lager(products, lager_id, lager_name, out_pdf):
+def draw_grid_lines(c, page_w, page_h, cols_n, rows_per_page, margin_x, margin_y, gap_x, gap_y, label_w, label_h):
+    c.setLineWidth(0.25)
 
+    # vertical separator lines between columns
+    for col in range(cols_n - 1):
+        x_line = margin_x + (col + 1) * label_w + col * gap_x + gap_x / 2
+        c.line(x_line, margin_y, x_line, page_h - margin_y)
+
+    # horizontal separator lines between rows
+    for row in range(rows_per_page - 1):
+        y_top_current = page_h - margin_y - row * (label_h + gap_y) - label_h
+        y_line = y_top_current - gap_y / 2
+        c.line(margin_x, y_line, page_w - margin_x, y_line)
+
+
+def generate_for_site(rows: list[sqlite3.Row], out_pdf: Path):
     out_pdf.parent.mkdir(parents=True, exist_ok=True)
 
     c = canvas.Canvas(str(out_pdf), pagesize=A4)
     W, H = A4
 
-    cols_n = 3
+    cols_n = 4
     rows_per_page = 6
 
-    margin_x = 8 * mm
-    margin_y = 10 * mm
+    margin_x = 2.5 * mm
+    margin_y = 3.5 * mm
 
-    label_w = (W - 2 * margin_x) / cols_n
-    label_h = (H - 2 * margin_y) / rows_per_page
+    gap_x = 2.0 * mm
+    gap_y = 4.6 * mm
+
+    label_w = (W - 2 * margin_x - (cols_n - 1) * gap_x) / cols_n
+    label_h = (H - 2 * margin_y - (rows_per_page - 1) * gap_y) / rows_per_page
 
     labels_per_page = cols_n * rows_per_page
 
-    rows = []
-
-    for p in products:
-        rows.append(
-            {
-                "id": p["id"],
-                "product_name": p["product_name"],
-                "nc_nummer": p["nc_nummer"],
-                "lager_id": lager_id,
-                "lager_name": lager_name,
-            }
-        )
-
     for i, r in enumerate(rows):
-
         idx = i % labels_per_page
         row_i = idx // cols_n
         col_i = idx % cols_n
 
-        x = margin_x + col_i * label_w
-        y = H - margin_y - (row_i + 1) * label_h
+        if idx == 0:
+            draw_grid_lines(
+                c, W, H, cols_n, rows_per_page,
+                margin_x, margin_y, gap_x, gap_y, label_w, label_h
+            )
+
+        x = margin_x + col_i * (label_w + gap_x)
+        y = H - margin_y - (row_i + 1) * label_h - row_i * gap_y
 
         draw_label(c, x, y, label_w, label_h, r)
 
@@ -225,19 +254,23 @@ def generate_for_lager(products, lager_id, lager_name, out_pdf):
             c.showPage()
 
     c.save()
-
     print(f"Wrote: {out_pdf}")
 
 
 def main():
+    rows = fetch_label_rows()
+    if not rows:
+        raise SystemExit("No active sites/products found.")
 
-    products = fetch_products()
+    grouped: dict[tuple[int, str], list[sqlite3.Row]] = {}
+    for r in rows:
+        key = (int(r["site_id"]), r["site_name"])
+        grouped.setdefault(key, []).append(r)
 
-    if not products:
-        raise SystemExit("No products found.")
-
-    for lager_id, lager_name, out_pdf in LAGERS:
-        generate_for_lager(products, lager_id, lager_name, out_pdf)
+    for (site_id, site_name), site_rows in grouped.items():
+        filename = f"qr_{site_id}_{slugify(site_name)}.pdf"
+        out_pdf = OUTPUT_DIR / filename
+        generate_for_site(site_rows, out_pdf)
 
 
 if __name__ == "__main__":

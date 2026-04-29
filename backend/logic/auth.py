@@ -8,8 +8,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from backend.db import db_session
-from backend.repo.users import get_user_by_id
-
+from backend.repo.workers import get_worker_by_id
 
 SECRET_KEY = "replace-this-with-a-long-random-secret"
 ALGORITHM = "HS256"
@@ -27,26 +26,26 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     return pwd_context.verify(plain_password, password_hash)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(worker_id: int) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
-        "sub": str(user_id),
+        "sub": str(worker_id),
         "exp": expire,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def serialize_user(user: dict) -> dict:
+def serialize_worker(worker: dict) -> dict:
     return {
-        "id": user["id"],
-        "worker_id": user["worker_id"],
-        "username": user["username"],
-        "first_name": user["first_name"],
-        "last_name": user["last_name"],
-        "is_admin": bool(user["is_admin"]),
-        "is_active": bool(user["is_active"]),
-        "password_set_at": user["password_set_at"],
-        "created_at": user["created_at"],
+        "id": worker["id"],
+        "username": worker["username"],
+        "first_name": worker["first_name"],
+        "last_name": worker["last_name"],
+        "auth_provider": worker["auth_provider"],
+        "ldap_dn": worker["ldap_dn"],
+        "is_admin": bool(worker["is_admin"]),
+        "is_active": bool(worker["is_active"]),
+        "created_at": worker["created_at"],
     }
 
 
@@ -61,20 +60,20 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         sub = payload.get("sub")
         if sub is None:
             raise credentials_exception
-        user_id = int(sub)
+        worker_id = int(sub)
     except (JWTError, ValueError):
         raise credentials_exception
 
     with db_session() as con:
-        user = get_user_by_id(con, user_id)
+        worker = get_worker_by_id(con, worker_id)
 
-    if not user:
+    if not worker:
         raise credentials_exception
 
-    if int(user["is_active"]) != 1:
+    if int(worker["is_active"]) != 1:
         raise HTTPException(status_code=403, detail="Account inactive")
 
-    return user
+    return worker
 
 
 def require_admin(current_user: dict = Depends(get_current_user)) -> dict:

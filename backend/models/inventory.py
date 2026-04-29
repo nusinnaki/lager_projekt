@@ -1,14 +1,10 @@
-from typing import Optional
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ActionIn(BaseModel):
     product_id: int
-    quantity: int
+    quantity: int = Field(gt=0)
 
 
-class ProductCreateIn(BaseModel):
-    kind: str
-    nc_nummer: Optional[str] = None
-    product_name: str
+class ProductLocationIn(BaseModel):
+    location_id: int

@@ -15,8 +15,6 @@
   const stockScanBtn = document.getElementById("stockScanBtn");
   const stockQrScanBox = document.getElementById("stockQrScanBox");
 
-  const showLogsBtn = document.getElementById("showLogsBtn");
-  const showStockBtn = document.getElementById("showStockBtn");
   const stockSearch = document.getElementById("stockSearch");
 
   const manualConfirmBtn = document.getElementById("manualConfirmBtn");
@@ -32,9 +30,22 @@
   let stockQr = null;
   let stockQrRunning = false;
   let lastStockCode = null;
+  let manualSubmitLocked = false;
 
   function redirectToLogin() {
     window.location.href = "/";
+  }
+
+  function showEl(el) {
+    if (!el) return;
+    el.classList.remove("hidden");
+    el.style.display = "block";
+  }
+
+  function hideEl(el) {
+    if (!el) return;
+    el.classList.add("hidden");
+    el.style.display = "none";
   }
 
   function setMessage(text, type = "") {
@@ -51,33 +62,21 @@
   }
 
   function openPasswordModal() {
-    if (passwordModal) passwordModal.style.display = "block";
+    showEl(passwordModal);
     if (oldPassword) oldPassword.value = "";
     if (newPassword) newPassword.value = "";
     setPasswordMessage("");
   }
 
   function closePasswordModal() {
-    if (passwordModal) passwordModal.style.display = "none";
+    hideEl(passwordModal);
     if (oldPassword) oldPassword.value = "";
     if (newPassword) newPassword.value = "";
     setPasswordMessage("");
   }
 
-  function showLogsView() {
-    window.App.logsTableFeature?.showLogsView?.();
-    showLogsBtn?.classList.add("hidden");
-    showStockBtn?.classList.remove("hidden");
-    if (stockSearch) stockSearch.classList.add("hidden");
-    stockScanBtn?.classList.add("hidden");
-    stockClearBtn?.classList.add("hidden");
-  }
-
   function showStockView() {
-    window.App.logsTableFeature?.hideLogsView?.();
-    showStockBtn?.classList.add("hidden");
-    showLogsBtn?.classList.remove("hidden");
-    if (stockSearch) stockSearch.classList.remove("hidden");
+    stockSearch?.classList.remove("hidden");
     stockScanBtn?.classList.remove("hidden");
     stockClearBtn?.classList.remove("hidden");
   }
@@ -92,7 +91,10 @@
     const first = currentUser.first_name || "";
     const last = currentUser.last_name || "";
     const username = currentUser.username || "";
-    currentUserName.textContent = [first, last].join(" ").trim() || username || "-";
+
+    if (currentUserName) {
+      currentUserName.textContent = [first, last].join(" ").trim() || username || "-";
+    }
 
     if (currentUser.is_admin && adminBtn) {
       adminBtn.classList.remove("hidden");
@@ -144,46 +146,44 @@
   });
 
   function showScanMode() {
-    if (qrScanBox) qrScanBox.style.display = "block";
-    if (manualBox) manualBox.style.display = "none";
+    showEl(qrScanBox);
+    hideEl(manualBox);
+
     chooseScanBtn?.classList.add("primary");
     chooseManualBtn?.classList.remove("primary");
   }
 
   async function showManualMode() {
     await window.App.qrScanFeature?.stopScan?.();
-    if (qrScanBox) qrScanBox.style.display = "none";
-    if (manualBox) manualBox.style.display = "block";
+
+    hideEl(qrScanBox);
+    showEl(manualBox);
+
     chooseManualBtn?.classList.add("primary");
     chooseScanBtn?.classList.remove("primary");
+
+    await loadManualProductsAndLocations();
+    await syncManualLocationVisibility();
   }
 
-  chooseScanBtn?.addEventListener("click", showScanMode);
+  chooseScanBtn?.addEventListener("click", async () => {
+    showScanMode();
+    await window.App.qrScanFeature?.startScan?.();
+  });
+
   chooseManualBtn?.addEventListener("click", showManualMode);
-
-  showLogsBtn?.addEventListener("click", async () => {
-    try {
-      await window.App.logsTableFeature.loadLogs(0);
-      showLogsView();
-      setMessage("");
-    } catch (err) {
-      setMessage(err.message || "Logs konnten nicht geladen werden.", "error");
-    }
-  });
-
-  showStockBtn?.addEventListener("click", () => {
-    showStockView();
-    setMessage("");
-  });
 
   stockClearBtn?.addEventListener("click", async () => {
     window.App.stockTableFeature?.clearStockFilter?.();
-    if (stockQrScanBox) stockQrScanBox.style.display = "none";
+
+    hideEl(stockQrScanBox);
+
     if (stockQr && stockQrRunning) {
       try {
         await stockQr.stop();
         await stockQr.clear();
       } catch {}
+
       stockQrRunning = false;
     }
   });
@@ -191,7 +191,12 @@
   async function startStockScan() {
     if (!stockQrScanBox || stockQrRunning) return;
 
-    stockQrScanBox.style.display = "block";
+    showEl(stockQrScanBox);
+
+    if (!window.Html5Qrcode) {
+      setMessage("QR Scanner Bibliothek wurde nicht geladen.", "error");
+      return;
+    }
 
     if (!stockQr) {
       stockQr = new Html5Qrcode("stockQrReader");
@@ -200,20 +205,23 @@
     try {
       await stockQr.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { fps: 10, qrbox: { width: 200, height: 200 } },
         async (decodedText) => {
           if (!decodedText) return;
           if (decodedText === lastStockCode) return;
+
           lastStockCode = decodedText;
 
           try {
             const parts = String(decodedText).trim().split("-");
+
             if (parts.length !== 2) {
               setMessage("QR Format ungültig.", "error");
               return;
             }
 
             const productId = parts[1].trim();
+
             window.App.stockTableFeature?.setStockFilter?.(productId);
             setMessage(`Produkt-ID ${productId} gefiltert.`, "success");
 
@@ -221,8 +229,9 @@
               await stockQr.stop();
               await stockQr.clear();
             } catch {}
+
             stockQrRunning = false;
-            stockQrScanBox.style.display = "none";
+            hideEl(stockQrScanBox);
           } finally {
             setTimeout(() => {
               lastStockCode = null;
@@ -245,28 +254,100 @@
         await stockQr.stop();
         await stockQr.clear();
       } catch {}
+
       stockQrRunning = false;
-      if (stockQrScanBox) stockQrScanBox.style.display = "none";
+      hideEl(stockQrScanBox);
       return;
     }
 
     await startStockScan();
   });
 
+  async function loadManualProductsAndLocations() {
+    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
+    const productSelect = document.getElementById("manualProductId");
+    const locationSelect = document.getElementById("manualLocationId");
+
+    if (!site || !productSelect || !locationSelect) return;
+
+    const [products, locations] = await Promise.all([
+      window.App.productsApi.listProducts(site),
+      window.App.productsApi.listLocations(site)
+    ]);
+
+    productSelect.innerHTML =
+      `<option value="">Produkt wählen</option>` +
+      (products || []).map((p) => {
+        const nc = p.nc_nummer ? ` | ${p.nc_nummer}` : "";
+        return `<option value="${p.id}">${p.product_name}${nc}</option>`;
+      }).join("");
+
+    locationSelect.innerHTML =
+      `<option value="">Lagerplatz wählen</option>` +
+      (locations || []).map((loc) => {
+        return `<option value="${loc.id}">Regal ${loc.shelf} / Fach ${loc.row}</option>`;
+      }).join("");
+  }
+
+  async function syncManualLocationVisibility() {
+    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
+    const productId = Number(document.getElementById("manualProductId")?.value || 0);
+    const locationLabel = document.getElementById("manualLocationLabel");
+    const locationSelect = document.getElementById("manualLocationId");
+
+    if (!site || !productId || !locationLabel || !locationSelect) {
+      hideEl(locationLabel);
+      hideEl(locationSelect);
+      return;
+    }
+
+    try {
+      const data = await window.App.productsApi.resolveProductForSite(site, productId);
+
+      if (data && data.location_id) {
+        hideEl(locationLabel);
+        hideEl(locationSelect);
+        return;
+      }
+    } catch {}
+
+    showEl(locationLabel);
+    showEl(locationSelect);
+  }
+
   async function handleManualConfirm() {
-    const site = document.getElementById("manualSite")?.value;
+    if (manualSubmitLocked) return;
+
+    manualSubmitLocked = true;
+
+    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
     const productId = Number(document.getElementById("manualProductId")?.value || 0);
     const action = document.getElementById("manualAction")?.value;
     const quantity = Number(document.getElementById("manualQty")?.value || 0);
+    const locationId = Number(document.getElementById("manualLocationId")?.value || 0);
 
     if (!site || !productId || !quantity || quantity <= 0) {
       setMessage("Manuelle Eingabe ist unvollständig.", "error");
       return;
     }
 
-    const payload = { product_id: productId, quantity };
-
     try {
+      const locationVisible = !document.getElementById("manualLocationId")?.classList.contains("hidden");
+
+      if (locationVisible) {
+        if (!locationId) {
+          setMessage("Bitte Lagerplatz auswählen.", "error");
+          return;
+        }
+
+        await window.App.productsApi.setProductLocation(site, productId, locationId);
+      }
+
+      const payload = {
+        product_id: productId,
+        quantity
+      };
+
       if (action === "take") {
         await window.App.stockApi.takeMaterial(site, payload);
       } else {
@@ -274,20 +355,40 @@
       }
 
       setMessage("Manuelle Buchung gespeichert.", "success");
+
       await window.App.stockTableFeature?.loadCombinedStock?.();
+      await syncManualLocationVisibility();
     } catch (err) {
       setMessage(err.message || "Manuelle Buchung fehlgeschlagen.", "error");
+    } finally {
+      manualSubmitLocked = false;
     }
   }
 
   manualConfirmBtn?.addEventListener("click", handleManualConfirm);
 
-  manualResetBtn?.addEventListener("click", () => {
-    document.getElementById("manualProductId").value = "";
-    document.getElementById("manualQty").value = "1";
-    document.getElementById("manualAction").value = "load";
-    document.getElementById("manualSite").value = "konstanz";
+  document.getElementById("manualSite")?.addEventListener("change", async () => {
+    await loadManualProductsAndLocations();
+    await syncManualLocationVisibility();
+  });
+
+  document.getElementById("manualProductId")?.addEventListener("change", syncManualLocationVisibility);
+
+  manualResetBtn?.addEventListener("click", async () => {
+    const manualProductId = document.getElementById("manualProductId");
+    const manualQty = document.getElementById("manualQty");
+    const manualAction = document.getElementById("manualAction");
+    const manualSite = document.getElementById("manualSite");
+
+    if (manualProductId) manualProductId.value = "";
+    if (manualQty) manualQty.value = "1";
+    if (manualAction) manualAction.value = "load";
+    if (manualSite) manualSite.value = "konstanz";
+
     setMessage("");
+
+    await loadManualProductsAndLocations();
+    await syncManualLocationVisibility();
   });
 
   window.App = window.App || {};
@@ -295,9 +396,10 @@
 
   window.App.qrScanFeature?.initQrScan?.();
   window.App.stockTableFeature?.initStockTable?.();
-  window.App.logsTableFeature?.initLogsTable?.();
 
   showScanMode();
   showStockView();
+
+  loadManualProductsAndLocations().catch(console.error);
   window.App.stockTableFeature?.loadCombinedStock?.().catch(console.error);
 })();

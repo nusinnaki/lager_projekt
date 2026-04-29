@@ -9,13 +9,14 @@ pandas = "==2.3.3"
 openpyxl = "==3.1.5"
 python-dotenv = "==1.2.2"
 python-multipart = "==0.0.22"
-reportlab = "==4.4.10"
-qrcode = {extras = ["pil"], version = "==8.2"}
 fastapi = "==0.135.1"
 uvicorn = "==0.41.0"
 python-jose = "==3.5.0"
 bcrypt = "==4.2.1"
-passlib = {extras = ["bcrypt"], version = "==1.7.4"}
+reportlab = "*"
+qrcode = "*"
+pillow = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
 
 [dev-packages]
 pytest = "==9.0.2"

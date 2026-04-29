@@ -9,93 +9,163 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "db" / "Lager_live.db"
 CSV_PATH = ROOT / "data" / "products.csv"
 
-LAGERS = [1, 2]  # 1=konstanz, 2=sindelfingen
-DEFAULT_KIND = "netcom"
+DEFAULT_BRAND = "Netcom"
+DEFAULT_CATEGORY = "Other"
 
 
 def norm(x: str | None) -> str:
     return " ".join((x or "").replace("\xa0", " ").split()).strip()
 
 
+def get_or_create_brand(con: sqlite3.Connection, name: str) -> int:
+    row = con.execute(
+        """
+        SELECT id
+        FROM brands
+        WHERE lower(trim(name)) = lower(trim(?))
+        """,
+        (name,),
+    ).fetchone()
+
+    if row:
+        con.execute(
+            """
+            UPDATE brands
+            SET active = 1
+            WHERE id = ?
+            """,
+            (row["id"],),
+        )
+        return int(row["id"])
+
+    cur = con.execute(
+        """
+        INSERT INTO brands(name, active)
+        VALUES (?, 1)
+        """,
+        (name,),
+    )
+    return int(cur.lastrowid)
+
+
+def get_or_create_category(con: sqlite3.Connection, name: str) -> int:
+    row = con.execute(
+        """
+        SELECT id
+        FROM categories
+        WHERE lower(trim(name)) = lower(trim(?))
+        """,
+        (name,),
+    ).fetchone()
+
+    if row:
+        con.execute(
+            """
+            UPDATE categories
+            SET active = 1
+            WHERE id = ?
+            """,
+            (row["id"],),
+        )
+        return int(row["id"])
+
+    cur = con.execute(
+        """
+        INSERT INTO categories(name, active)
+        VALUES (?, 1)
+        """,
+        (name,),
+    )
+    return int(cur.lastrowid)
+
+
 def main() -> None:
     if not CSV_PATH.exists():
-        raise FileNotFoundError(CSV_PATH)
+        raise SystemExit(f"products.csv not found: {CSV_PATH}")
 
     if not DB_PATH.exists():
-        raise FileNotFoundError(DB_PATH)
+        raise SystemExit(f"DB not found: {DB_PATH}")
 
     con = sqlite3.connect(str(DB_PATH))
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON;")
 
     inserted_products = 0
-    ensured_stock = 0
+    skipped_products = 0
 
     try:
-        con.execute("BEGIN;")
+        con.execute("BEGIN")
 
         with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as f:
-            r = csv.DictReader(f)
-            if not r.fieldnames:
+            reader = csv.DictReader(f)
+
+            if not reader.fieldnames:
                 raise SystemExit("products.csv has no header")
 
-            hdr = {h.strip().lower(): h.strip() for h in r.fieldnames if h}
+            hdr = {h.strip().lower(): h.strip() for h in reader.fieldnames if h}
 
             k_nc = hdr.get("nc_nummer") or hdr.get("nc-nummer") or hdr.get("ncnummer")
             k_name = hdr.get("product_name") or hdr.get("materialkurztext") or hdr.get("material_kurztext")
+            k_brand = hdr.get("brand") or hdr.get("marke")
+            k_category = hdr.get("category") or hdr.get("kategorie")
 
-            if not k_nc or not k_name:
+            if not k_name:
                 raise SystemExit(
-                    "products.csv must have headers: NC_Nummer and Materialkurztext "
-                    "(or product_name)"
+                    "products.csv must have a product name column: "
+                    "product_name or Materialkurztext"
                 )
 
-            for row in r:
-                nc = norm(row.get(k_nc))
+            for row in reader:
                 product_name = norm(row.get(k_name))
+                nc = norm(row.get(k_nc)) if k_nc else None
+                brand_name = norm(row.get(k_brand)) if k_brand else DEFAULT_BRAND
+                category_name = norm(row.get(k_category)) if k_category else DEFAULT_CATEGORY
 
-                if not nc or not product_name:
+                if not product_name:
+                    skipped_products += 1
                     continue
+
+                if not brand_name:
+                    brand_name = DEFAULT_BRAND
+
+                if not category_name:
+                    category_name = DEFAULT_CATEGORY
+
+                brand_id = get_or_create_brand(con, brand_name)
+                category_id = get_or_create_category(con, category_name)
 
                 cur = con.execute(
                     """
-                    INSERT OR IGNORE INTO products(kind, nc_nummer, product_name, active)
-                    VALUES (?, ?, ?, 1)
-                    """,
-                    (DEFAULT_KIND, nc, product_name),
-                )
-                inserted_products += cur.rowcount
-
-                # get product_id (existing or new)
-                pid_row = con.execute(
-                    "SELECT id FROM products WHERE nc_nummer = ?",
-                    (nc,),
-                ).fetchone()
-
-                if not pid_row:
-                    raise RuntimeError(f"Could not find product after insert: {nc}")
-
-                pid = int(pid_row["id"])
-
-                # ensure stock rows for both lagers
-                for lager_id in LAGERS:
-                    cur2 = con.execute(
-                        """
-                        INSERT OR IGNORE INTO stock(lager_id, product_id, quantity)
-                        VALUES (?, ?, 0)
-                        """,
-                        (lager_id, pid),
+                    INSERT OR IGNORE INTO products(
+                        category_id,
+                        brand_id,
+                        product_name,
+                        nc_nummer,
+                        active
                     )
-                    ensured_stock += cur2.rowcount
+                    VALUES (?, ?, ?, ?, 1)
+                    """,
+                    (category_id, brand_id, product_name, nc or None),
+                )
+
+                if cur.rowcount:
+                    inserted_products += 1
+                else:
+                    skipped_products += 1
 
         con.commit()
-        print(f"OK: inserted {inserted_products} products, ensured {ensured_stock} stock rows")
 
     except Exception:
         con.rollback()
         raise
+
     finally:
         con.close()
+
+    print(
+        f"OK: inserted {inserted_products} products, "
+        f"skipped {skipped_products} existing/invalid rows"
+    )
 
 
 if __name__ == "__main__":

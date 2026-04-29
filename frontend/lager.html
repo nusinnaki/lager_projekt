@@ -4,423 +4,287 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Lager</title>
+
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/layout.css" />
   <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/lager.css" />
 
   <style>
-    body { background: #fff; }
-
-    .container {
-      width: 100%;
-      max-width: 1100px;
-      margin: 18px auto 40px;
-      padding: 0 16px;
+    .stock-site-line {
+      margin-bottom: 6px;
     }
 
-    .panel {
-      background: #eee;
-      border: 1px solid #ddd;
-      border-radius: 16px;
-      margin-bottom: 16px;
+    .stock-site-line:last-child {
+      margin-bottom: 0;
     }
 
-    .panelBody {
-      padding: 16px;
+    .muted {
+      opacity: 0.7;
+      font-size: 12px;
     }
 
-    .topRow {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      width: 100%;
-    }
-
-    .userBox {
-      font-size: 14px;
-      color: #333;
+    .right {
       text-align: right;
     }
 
-    .userLink {
-      cursor: pointer;
-      text-decoration: underline;
-      font-weight: 700;
-    }
-
-    .topButtons {
-      margin-top: 8px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .modeRow,
-    .stockTools,
-    .confirmActions,
-    .logsPager {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .actionBtn {
-      flex: 1;
-      text-align: center;
-      font-weight: 800;
-      letter-spacing: .5px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,.18);
-      background: #fff;
-      cursor: pointer;
-    }
-
-    .actionBtn.active {
-      background: #111;
-      color: #fff;
-      border-color: #111;
-    }
-
-    #qrScanBox,
-    #stockQrScanBox {
-      display: none;
-      margin-top: 14px;
-    }
-
-    #qrReader,
-    #stockQrReader {
-      width: 100%;
-      max-width: 520px;
-    }
-
-    .scannerHint {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #444;
-    }
-
-    .manualBox,
-    .confirmBox {
-      display: none;
-      margin-top: 16px;
-      padding: 14px;
-      border: 1px solid rgba(0,0,0,.12);
-      border-radius: 14px;
-      background: #fff;
-    }
-
-    .confirmTitle {
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .confirmGrid,
-    .manualGrid,
-    .passwordGrid {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 10px 14px;
-      align-items: center;
-    }
-
-    .confirmLabel {
-      font-weight: 700;
-    }
-
-    .confirmValue {
-      word-break: break-word;
-    }
-
-    .qtyRow {
-      margin-top: 12px;
-    }
-
-    .qtyRow input {
-      max-width: 140px;
-    }
-
-    .stockSearch {
-      flex: 1;
-      min-width: 220px;
-    }
-
-    .tableWrap {
-      overflow-x: auto;
-      margin-top: 14px;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-    }
-
-    .table th,
-    .table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #e5e5e5;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .table th.right,
-    .table td.right {
-      text-align: right;
-    }
-
-    .msg {
-      margin-top: 10px;
-      min-height: 18px;
-      font-size: 14px;
-    }
-
-    .modalWrap {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.35);
-      z-index: 999;
-      padding: 20px;
-    }
-
-    .modalCard {
-      max-width: 520px;
-      margin: 60px auto 0;
-      background: #fff;
-      border-radius: 16px;
-      border: 1px solid #ddd;
-      box-shadow: 0 12px 30px rgba(0,0,0,.15);
-      overflow: hidden;
-    }
-
-    .modalHeader {
-      padding: 14px 16px;
-      font-weight: 800;
-      border-bottom: 1px solid #e5e5e5;
-      background: #f8f8f8;
-    }
-
-    .modalBody {
-      padding: 16px;
-    }
-
-    .modalActions {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 760px) {
-      .confirmGrid,
-      .manualGrid,
-      .passwordGrid {
-        grid-template-columns: 1fr;
-      }
-
-      .topRow {
-        flex-direction: column;
-      }
-
-      .userBox {
-        text-align: left;
-      }
-
-      .topButtons {
-        justify-content: flex-start;
-      }
+    #stockSiteFilter,
+    #stockCategoryFilter {
+      min-width: 180px;
     }
   </style>
 </head>
 
 <body>
-  <main class="container">
-    <header class="header">
-      <div class="topRow">
-        <div></div>
+  <main class="container lager-page">
+    <header class="page-header page-header-spread">
+      <div></div>
 
-        <div class="userBox">
-          <div id="currentUserName" class="userLink">-</div>
-          <div class="topButtons">
-            <button id="adminBtn" class="hidden" type="button">Admin</button>
-            <button id="logoutBtn" type="button">Abmelden</button>
-          </div>
+      <div class="user-box">
+        <div id="currentUserName" class="user-link">-</div>
+
+        <div class="top-buttons">
+          <button id="adminBtn" class="hidden" type="button">Admin</button>
+          <button id="logoutBtn" type="button">Abmelden</button>
         </div>
       </div>
     </header>
 
-    <section class="panel">
-      <div class="panelBody">
-        <div class="confirmTitle">Produkt bearbeiten</div>
+    <section class="card">
+      <div class="section-title">Produkt bewegen</div>
 
-        <div class="modeRow">
-          <button id="chooseScanBtn" class="primary" type="button">Scannen</button>
-          <button id="chooseManualBtn" type="button">Manuell</button>
-        </div>
-
-        <div id="qrScanBox">
-          <div id="qrReader"></div>
-          <div class="scannerHint">Kamera auf den QR-Code richten</div>
-        </div>
-
-        <div id="manualBox" class="manualBox">
-          <div class="confirmTitle">Manuelle Buchung</div>
-
-          <div class="manualGrid">
-            <div class="confirmLabel">Lager</div>
-            <select id="manualSite">
-              <option value="konstanz">Konstanz</option>
-              <option value="sindelfingen">Sindelfingen</option>
-            </select>
-
-            <div class="confirmLabel">Produkt-ID</div>
-            <input id="manualProductId" type="number" min="1" step="1" placeholder="Produkt-ID" />
-
-            <div class="confirmLabel">Aktion</div>
-            <select id="manualAction">
-              <option value="load">Einlagern</option>
-              <option value="take">Entnehmen</option>
-            </select>
-
-            <div class="confirmLabel">Menge</div>
-            <input id="manualQty" type="number" min="1" step="1" value="1" />
-          </div>
-
-          <div class="confirmActions">
-            <button id="manualConfirmBtn" class="primary" type="button">Bestätigen</button>
-            <button id="manualResetBtn" type="button">Zurücksetzen</button>
-          </div>
-        </div>
-
-        <div id="actionRow" class="modeRow hidden">
-          <button id="modeLoad" class="actionBtn" type="button">Einlagern</button>
-          <button id="modeTake" class="actionBtn" type="button">Entnehmen</button>
-        </div>
-
-        <div id="confirmBox" class="confirmBox">
-          <div class="confirmTitle">Eintrag prüfen</div>
-
-          <div class="confirmGrid">
-            <div class="confirmLabel">Mitarbeiter</div>
-            <div id="confirmWorker" class="confirmValue">-</div>
-
-            <div class="confirmLabel">Aktion</div>
-            <div id="confirmAction" class="confirmValue">-</div>
-
-            <div class="confirmLabel">Lager</div>
-            <div id="confirmLager" class="confirmValue">-</div>
-
-            <div class="confirmLabel">Produkt-ID</div>
-            <div id="confirmProductId" class="confirmValue">-</div>
-
-            <div class="confirmLabel">Produkt</div>
-            <div id="confirmProductName" class="confirmValue">-</div>
-
-            <div class="confirmLabel">NC Nummer</div>
-            <div id="confirmNcNummer" class="confirmValue">-</div>
-
-            <div class="confirmLabel">Aktueller Bestand</div>
-            <div id="confirmCurrentQty" class="confirmValue">-</div>
-          </div>
-
-          <div class="qtyRow">
-            <label for="qty" class="confirmLabel">Menge</label>
-            <input id="qty" type="number" min="1" step="1" value="1" />
-          </div>
-
-          <div class="confirmActions">
-            <button id="confirmBtn" class="primary" type="button">Bestätigen</button>
-            <button id="resetBtn" type="button">Zurücksetzen</button>
-          </div>
-        </div>
-
-        <div id="msg" class="msg"></div>
+      <div class="toolbar">
+        <button id="chooseScanBtn" class="primary" type="button">Scannen</button>
+        <button id="chooseManualBtn" type="button">Manuell</button>
       </div>
+
+      <div id="qrScanBox" class="scanner-box hidden">
+        <div id="qrReader"></div>
+        <div class="scanner-hint">Kamera auf den QR-Code richten</div>
+      </div>
+
+      <div id="manualBox" class="card card-inner hidden">
+        <div class="section-title">Manuelle Buchung</div>
+
+        <div class="form-grid form-grid-wide">
+          <label for="manualSite">Site</label>
+
+          <select id="manualSite">
+            <option value="konstanz">Konstanz</option>
+            <option value="sindelfingen">Sindelfingen</option>
+          </select>
+
+          <label for="manualProductId">Produkt</label>
+
+          <select id="manualProductId">
+            <option value="">Produkt wählen</option>
+          </select>
+
+          <label id="manualLocationLabel" class="hidden" for="manualLocationId">Lagerplatz</label>
+
+          <select id="manualLocationId" class="hidden">
+            <option value="">Lagerplatz wählen</option>
+          </select>
+
+          <label for="manualAction">Aktion</label>
+
+          <select id="manualAction">
+            <option value="load">Einlagern</option>
+            <option value="take">Entnehmen</option>
+          </select>
+
+          <label for="manualQty">Menge</label>
+
+          <input
+            id="manualQty"
+            type="number"
+            min="1"
+            step="1"
+            value="1"
+          />
+        </div>
+
+        <div class="toolbar">
+          <button id="manualConfirmBtn" class="primary" type="button">
+            Bestätigen
+          </button>
+
+          <button id="manualResetBtn" type="button">
+            Zurücksetzen
+          </button>
+        </div>
+      </div>
+
+      <div id="actionRow" class="toolbar hidden">
+        <button id="modeLoad" class="action-btn" type="button">
+          Einlagern
+        </button>
+
+        <button id="modeTake" class="action-btn" type="button">
+          Entnehmen
+        </button>
+      </div>
+
+      <div id="confirmBox" class="card card-inner hidden">
+        <div class="section-title">Eintrag prüfen</div>
+
+        <div class="confirm-grid">
+          <div class="confirm-label">Mitarbeiter</div>
+          <div id="confirmWorker" class="confirm-value">-</div>
+
+          <div class="confirm-label">Aktion</div>
+          <div id="confirmAction" class="confirm-value">-</div>
+
+          <div class="confirm-label">Site</div>
+          <div id="confirmLager" class="confirm-value">-</div>
+
+          <div class="confirm-label">Kategorie</div>
+          <div id="confirmCategory" class="confirm-value">-</div>
+
+          <div class="confirm-label">Brand</div>
+          <div id="confirmBrand" class="confirm-value">-</div>
+
+          <div class="confirm-label">Shelf</div>
+          <div id="confirmShelf" class="confirm-value">-</div>
+
+          <div class="confirm-label">Row</div>
+          <div id="confirmRow" class="confirm-value">-</div>
+
+          <div class="confirm-label">Location-ID</div>
+          <div id="confirmLocationId" class="confirm-value">-</div>
+
+          <div class="confirm-label">Produkt-ID</div>
+          <div id="confirmProductId" class="confirm-value">-</div>
+
+          <div class="confirm-label">Produkt</div>
+          <div id="confirmProductName" class="confirm-value">-</div>
+
+          <div class="confirm-label">NC Nummer</div>
+          <div id="confirmNcNummer" class="confirm-value">-</div>
+
+          <div class="confirm-label">Aktueller Bestand</div>
+          <div id="confirmCurrentQty" class="confirm-value">-</div>
+
+          <div id="confirmLocationSelectLabel" class="confirm-label hidden">Lagerplatz wählen</div>
+          <div id="confirmLocationSelectWrap" class="confirm-value hidden">
+            <select id="confirmLocationSelect">
+              <option value="">Lagerplatz wählen</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="qty-row">
+          <label for="qty" class="confirm-label">Menge</label>
+
+          <input
+            id="qty"
+            type="number"
+            min="1"
+            step="1"
+            value="1"
+          />
+        </div>
+
+        <div class="toolbar">
+          <button id="confirmBtn" class="primary" type="button">
+            Bestätigen
+          </button>
+
+          <button id="resetBtn" type="button">
+            Zurücksetzen
+          </button>
+        </div>
+      </div>
+
+      <div id="msg" class="msg"></div>
     </section>
 
-    <section class="panel">
-      <div class="panelBody">
-        <div class="confirmTitle">Aktueller Lagerbestand</div>
+    <section class="card">
+      <div class="section-title">Aktueller Lagerbestand</div>
 
-        <div class="stockTools">
-          <button id="stockScanBtn" type="button">Scan</button>
-          <input id="stockSearch" class="stockSearch" type="text" placeholder="Suche nach Produkt oder ID" />
-          <button id="stockClearBtn" type="button">Zurücksetzen</button>
-          <button id="showLogsBtn" type="button">Logs</button>
-          <button id="showStockBtn" class="hidden" type="button">Bestand</button>
-        </div>
+      <div class="toolbar">
+        <button id="stockScanBtn" type="button">Scan</button>
 
-        <div id="stockQrScanBox">
-          <div id="stockQrReader"></div>
-          <div class="scannerHint">Kamera auf den QR-Code richten</div>
-        </div>
+        <select id="stockSiteFilter">
+          <option value="all">Alle Sites</option>
+        </select>
 
-        <div id="stockTableWrap" class="tableWrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Produkt</th>
-                <th class="right">Konstanz</th>
-                <th class="right">Sindelfingen</th>
-                <th class="right">Gesamt</th>
-              </tr>
-            </thead>
-            <tbody id="stockBody"></tbody>
-          </table>
-        </div>
+        <select id="stockCategoryFilter">
+          <option value="all">Alle Kategorien</option>
+        </select>
 
-        <div id="logsTableWrap" class="tableWrap hidden">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Zeit</th>
-                <th>Aktion</th>
-                <th>Produkt-ID</th>
-                <th>Produkt</th>
-                <th>Menge</th>
-                <th>Lager</th>
-                <th>Mitarbeiter</th>
-              </tr>
-            </thead>
-            <tbody id="logsBody"></tbody>
-          </table>
-        </div>
+        <input
+          id="stockSearch"
+          class="stock-search"
+          type="text"
+          placeholder="Produkt, Kategorie, Brand, NC Nummer oder ID suchen"
+        />
 
-        <div id="logsPager" class="logsPager hidden">
-          <button id="logsPrevBtn" type="button">Vorherige</button>
-          <button id="logsNextBtn" type="button">Nächste</button>
-          <span id="logsPageInfo"></span>
-        </div>
+        <button id="stockClearBtn" type="button">
+          Zurücksetzen
+        </button>
+
+
       </div>
+
+      <div id="stockQrScanBox" class="scanner-box hidden">
+        <div id="stockQrReader"></div>
+        <div class="scanner-hint">Kamera auf den QR-Code richten</div>
+      </div>
+
+      <div id="stockTableWrap" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produkt</th>
+              <th>Brand</th>
+              <th>Kategorie</th>
+              <th>NC Nummer</th>
+              <th>Regal</th>
+              <th>Fach</th>
+              <th class="right">Menge</th>
+            </tr>
+          </thead>
+
+          <tbody id="stockBody"></tbody>
+        </table>
+      </div>
+
+
     </section>
   </main>
 
-  <div id="passwordModal" class="modalWrap">
-    <div class="modalCard">
-      <div class="modalHeader">Passwort ändern</div>
-      <div class="modalBody">
-        <div class="passwordGrid">
-          <div class="confirmLabel">Altes Passwort</div>
-          <input id="oldPassword" type="password" placeholder="Altes Passwort" />
+  <div id="passwordModal" class="modal-wrap hidden">
+    <div class="modal-card">
+      <div class="modal-header">Passwort ändern</div>
 
-          <div class="confirmLabel">Neues Passwort</div>
-          <input id="newPassword" type="password" placeholder="Neues Passwort" />
+      <div class="modal-body">
+        <div class="form-grid form-grid-wide">
+          <label for="oldPassword">Altes Passwort</label>
+
+          <input
+            id="oldPassword"
+            type="password"
+            placeholder="Altes Passwort"
+          />
+
+          <label for="newPassword">Neues Passwort</label>
+
+          <input
+            id="newPassword"
+            type="password"
+            placeholder="Neues Passwort"
+          />
         </div>
 
-        <div class="modalActions">
-          <button id="savePasswordBtn" class="primary" type="button">Speichern</button>
-          <button id="closePasswordBtn" type="button">Schließen</button>
+        <div class="toolbar">
+          <button id="savePasswordBtn" class="primary" type="button">
+            Speichern
+          </button>
+
+          <button id="closePasswordBtn" type="button">
+            Schließen
+          </button>
         </div>
 
         <div id="passwordMsg" class="msg"></div>
@@ -434,11 +298,13 @@
   <script src="/js/api/stock.js"></script>
   <script src="/js/api/admin.js"></script>
   <script src="/js/api/history.js"></script>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
+
   <script src="/js/features/qr-scan.js"></script>
   <script src="/js/features/traffic-lights.js"></script>
   <script src="/js/features/stock-table.js"></script>
-  <script src="/js/features/logs-table.js"></script>
+
   <script src="/js/pages/lager.js"></script>
 </body>
 </html>

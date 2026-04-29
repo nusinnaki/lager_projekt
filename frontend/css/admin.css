@@ -7,3 +7,66 @@
 .admin-panel h2 {
   margin-top: 0;
 }
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+}
+
+.admin-list {
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  margin-top: 10px;
+}
+
+.admin-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.admin-item:hover {
+  background: #f8f8f8;
+}
+
+.admin-item.active {
+  background: #111;
+  color: #fff;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.form-actions {
+  margin-top: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  margin-top: 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .admin-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

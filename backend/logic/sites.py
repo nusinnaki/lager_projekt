@@ -1,15 +1,23 @@
 from fastapi import HTTPException
 
 
-def lager_id_from_site(site: str) -> int:
-    normalized = site.strip().lower()
+def site_id_from_name(con, site: str) -> int:
+    normalized = (site or "").strip()
 
-    mapping = {
-        "konstanz": 1,
-        "sindelfingen": 2,
-    }
+    if not normalized:
+        raise HTTPException(status_code=400, detail="Site is required")
 
-    if normalized not in mapping:
+    row = con.execute(
+        """
+        SELECT id
+        FROM sites
+        WHERE lower(trim(name)) = lower(trim(?))
+          AND active = 1
+        """,
+        (normalized,),
+    ).fetchone()
+
+    if not row:
         raise HTTPException(status_code=404, detail="Unknown site")
 
-    return mapping[normalized]
+    return int(row["id"])

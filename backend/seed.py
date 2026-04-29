@@ -23,33 +23,17 @@ def ensure_schema(con: sqlite3.Connection) -> None:
     con.executescript(sql)
 
 
-def ensure_lagers(con: sqlite3.Connection) -> None:
-    # Stable IDs: 1=Konstanz, 2=Sindelfingen
-    con.execute(
-        "INSERT OR IGNORE INTO lagers(id, name) VALUES (?, ?)",
-        (1, "konstanz"),
-    )
-
-    con.execute(
-        "INSERT OR IGNORE INTO lagers(id, name) VALUES (?, ?)",
-        (2, "sindelfingen"),
-    )
-
-
 def main() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     con = sqlite3.connect(str(DB_PATH))
-    con.row_factory = sqlite3.Row
-
     try:
         ensure_schema(con)
-        ensure_lagers(con)
         con.commit()
     finally:
         con.close()
 
-    print(f"OK: ensured schema + lagers in {DB_PATH}")
+    print(f"OK: ensured schema in {DB_PATH}")
 
 
 if __name__ == "__main__":

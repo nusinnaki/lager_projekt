@@ -43,7 +43,9 @@
         <td>${row.product_id}</td>
         <td>${row.product_name || ""}</td>
         <td>${row.quantity}</td>
-        <td>${row.lager_name || ""}</td>
+        <td>${row.site_name || ""}</td>
+        <td>${row.shelf ?? ""}</td>
+        <td>${row.row ?? ""}</td>
         <td>${workerName}</td>
       `;
       tbody.appendChild(tr);
