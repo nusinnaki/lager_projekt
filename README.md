@@ -65,6 +65,16 @@ Explanation:
 
 maps the container's port 8000 to your local machine.
 
+### Persistent database storage
+
+To keep the SQLite database even after the container stops, mount the local `db/` folder into the container:
+
+```bash
+docker run --rm -it \
+  -p 8000:8000 \
+  -v $(pwd)/db:/app/db \
+  lager-projekt
+
 ---
 
 # 4. Open the application
@@ -107,7 +117,9 @@ http://localhost:8000
 
 ### Camera access (QR scanning)
 
-QR scanning requires the page to be served over HTTP.
+QR scanning requires the application to be served through the FastAPI server.
+
+Opening frontend files directly with `file://` will not allow camera access or API communication.
 
 Docker already provides this through the FastAPI server.
 
@@ -139,7 +151,7 @@ The application uses a local SQLite database stored in:
 db/Lager_live.db
 ```
 
-The database is automatically initialized at startup if it does not exist.
+If the database file does not exist, the application initializes the schema automatically.
 
 ---
 
