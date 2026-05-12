@@ -57,15 +57,6 @@
           <option value="false">Nein</option>
         </select>
 
-        <label for="workerAuthProvider">Auth Provider</label>
-        <select id="workerAuthProvider">
-          <option value="local" selected>local</option>
-          <option value="ldap">ldap</option>
-        </select>
-
-        <label id="workerLdapDnLabel" class="hidden" for="workerLdapDn">LDAP DN</label>
-        <input id="workerLdapDn" class="hidden" type="text" />
-
         <div></div>
         <div class="form-actions">
           <button id="saveWorkerBtn" class="primary" type="submit">Speichern</button>
@@ -81,12 +72,12 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
+              <th>Vorname</th>
+              <th>Nachname</th>
               <th>Username</th>
-              <th>Passwort</th>
               <th>Rolle</th>
               <th>Aktiv</th>
-              <th>Aktionen</th>
+              <th>Passwort</th>
             </tr>
           </thead>
           <tbody id="usersBody"></tbody>
@@ -151,7 +142,7 @@
               <th>Brand</th>
               <th>NC Nummer</th>
               <th>Aktiv</th>
-              <th>Aktion</th>
+              <th>Passwort</th>
             </tr>
           </thead>
           <tbody id="productsBody"></tbody>
@@ -189,7 +180,7 @@
               <th>ID</th>
               <th>Name</th>
               <th>Aktiv</th>
-              <th>Aktion</th>
+              <th>Passwort</th>
             </tr>
           </thead>
           <tbody id="sitesBody"></tbody>
@@ -206,7 +197,7 @@
             <tr>
               <th>ID</th>
               <th>Zeit</th>
-              <th>Aktion</th>
+              <th>Passwort</th>
               <th>Produkt-ID</th>
               <th>Produkt</th>
               <th>Menge</th>

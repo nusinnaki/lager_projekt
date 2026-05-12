@@ -24,9 +24,6 @@
   const workerUsername = document.getElementById("workerUsername");
   const workerAdmin = document.getElementById("workerAdmin");
   const workerActive = document.getElementById("workerActive");
-  const workerAuthProvider = document.getElementById("workerAuthProvider");
-  const workerLdapDn = document.getElementById("workerLdapDn");
-  const workerLdapDnLabel = document.getElementById("workerLdapDnLabel");
   const newWorkerBtn = document.getElementById("newWorkerBtn");
   const cancelWorkerCreateBtn = document.getElementById("cancelWorkerCreateBtn");
 
@@ -59,13 +56,8 @@
   let allSites = [];
 
   let editingWorkerId = null;
-  let creatingNewWorker = true;
-
   let editingProductId = null;
-  let creatingNewProduct = true;
-
   let editingSiteId = null;
-  let creatingNewSite = true;
 
   function esc(value) {
     return String(value ?? "")
@@ -113,7 +105,10 @@
     tabLogs?.classList.toggle("primary", name === "logs");
 
     if (name === "logs") {
-      loadLogs().catch((err) => setMsg(err.message || "Logs konnten nicht geladen werden.", "error"));
+      loadLogs().catch((err) => {
+        console.error(err);
+        setMsg("Logs konnten nicht geladen werden.", "error");
+      });
     }
   }
 
@@ -124,16 +119,8 @@
     return `${first}.${last}`;
   }
 
-  function syncWorkerLdapVisibility() {
-    const isLdap = (workerAuthProvider?.value || "local") === "ldap";
-    workerLdapDnLabel?.classList.toggle("hidden", !isLdap);
-    workerLdapDn?.classList.toggle("hidden", !isLdap);
-  }
-
   function clearWorkerFormForCreate() {
-    creatingNewWorker = true;
     editingWorkerId = null;
-
     workerForm?.classList.remove("hidden");
     newWorkerBtn?.classList.add("hidden");
 
@@ -142,40 +129,22 @@
     if (workerUsername) workerUsername.value = "";
     if (workerAdmin) workerAdmin.value = "false";
     if (workerActive) workerActive.value = "true";
-    if (workerAuthProvider) workerAuthProvider.value = "local";
-    if (workerLdapDn) workerLdapDn.value = "";
 
-    syncWorkerLdapVisibility();
     setMsg("Neuen Mitarbeiter anlegen.", "");
   }
 
-  async function handleResetPassword(worker) {
-    const newPassword = window.prompt(`Neues Passwort für ${worker.username}:`);
-    if (!newPassword) return;
-
-    try {
-      await window.App.adminApi.resetWorkerPassword(worker.id, newPassword);
-      setMsg("Passwort wurde zurückgesetzt.", "success");
-      await loadWorkers();
-    } catch (err) {
-      setMsg(err.message || "Passwort konnte nicht zurückgesetzt werden.", "error");
-    }
-  }
-
   function renderWorkers(rows) {
+    if (!usersBody) return;
     usersBody.innerHTML = "";
 
     rows.forEach((row) => {
       const tr = document.createElement("tr");
       const isEditing = Number(editingWorkerId) === Number(row.id);
       const roleLabel = row.is_admin ? "Admin" : "Techniker";
-      const passwordLabel = row.has_password ? "Gesetzt" : "Nicht gesetzt";
 
       if (isEditing) {
         const roleValue = row.is_admin ? "true" : "false";
         const activeValue = row.is_active ? "true" : "false";
-        const authValue = row.auth_provider || "local";
-        const ldapDisabled = authValue === "ldap" ? "" : "disabled";
 
         tr.innerHTML = `
           <td>${row.id}</td>
@@ -195,32 +164,15 @@
             </select>
           </td>
           <td>
-            <select class="workerAuthProviderCell">
-              <option value="local" ${authValue === "local" ? "selected" : ""}>local</option>
-              <option value="ldap" ${authValue === "ldap" ? "selected" : ""}>ldap</option>
-            </select>
-          </td>
-          <td><input class="workerLdapDnCell" type="text" value="${esc(row.ldap_dn)}" ${ldapDisabled} /></td>
-          <td>${passwordLabel}</td>
-          <td>
-            <button class="saveWorkerBtn" type="button">Speichern</button>
-            <button class="cancelWorkerBtn" type="button">Abbrechen</button>
-            <button class="resetPasswordBtn" type="button">Passwort</button>
+            <div class="inline-worker-password-actions">
+              <input class="workerPasswordCell" type="password" value="" placeholder="Neues Passwort" autocomplete="new-password" />
+              <div class="inline-worker-actions">
+                <button class="saveWorkerBtn" type="button">Speichern</button>
+                <button class="cancelWorkerBtn" type="button">Abbrechen</button>
+              </div>
+            </div>
           </td>
         `;
-
-        const authSelect = tr.querySelector(".workerAuthProviderCell");
-        const ldapInput = tr.querySelector(".workerLdapDnCell");
-
-        function syncRowLdap() {
-          const isLdap = authSelect?.value === "ldap";
-          if (ldapInput) {
-            ldapInput.disabled = !isLdap;
-            if (!isLdap) ldapInput.value = "";
-          }
-        }
-
-        authSelect?.addEventListener("change", syncRowLdap);
 
         tr.querySelector(".saveWorkerBtn")?.addEventListener("click", async () => {
           try {
@@ -230,14 +182,20 @@
               username: tr.querySelector(".workerUsernameCell")?.value.trim().toLowerCase() || "",
               is_admin: tr.querySelector(".workerAdminCell")?.value === "true",
               is_active: tr.querySelector(".workerActiveCell")?.value === "true",
-              auth_provider: tr.querySelector(".workerAuthProviderCell")?.value || "local",
-              ldap_dn: tr.querySelector(".workerLdapDnCell")?.value.trim() || null
+              auth_provider: "local",
+              ldap_dn: null
             });
+
+            const newPassword = tr.querySelector(".workerPasswordCell")?.value.trim() || "";
+            if (newPassword) {
+              await window.App.adminApi.resetWorkerPassword(row.id, newPassword);
+            }
 
             editingWorkerId = null;
             setMsg("Mitarbeiter gespeichert.", "success");
             await loadWorkers();
           } catch (err) {
+            console.error(err);
             setMsg(err.message || "Mitarbeiter konnte nicht gespeichert werden.", "error");
           }
         });
@@ -246,8 +204,6 @@
           editingWorkerId = null;
           renderWorkers(allWorkers);
         });
-
-        tr.querySelector(".resetPasswordBtn")?.addEventListener("click", () => handleResetPassword(row));
       } else {
         tr.innerHTML = `
           <td>${row.id}</td>
@@ -256,10 +212,9 @@
           <td>${esc(row.username)}</td>
           <td>${roleLabel}</td>
           <td>${row.is_active ? "Ja" : "Nein"}</td>
-          <td>${esc(row.auth_provider || "local")}</td>
-          <td>${esc(row.ldap_dn)}</td>
-          <td>${passwordLabel}</td>
-          <td><button class="editWorkerBtn" type="button">Bearbeiten</button></td>
+          <td>
+            <button class="editWorkerBtn" type="button">Bearbeiten</button>
+          </td>
         `;
 
         tr.querySelector(".editWorkerBtn")?.addEventListener("click", () => {
@@ -273,9 +228,7 @@
   }
 
   function selectedBrandName() {
-    if ((productBrand?.value || "") === "__new__") {
-      return "";
-    }
+    if ((productBrand?.value || "") === "__new__") return "";
 
     const selected = allBrands.find(
       (b) => Number(b.id) === Number(productBrand?.value || 0)
@@ -291,46 +244,31 @@
 
     productCategoryNewLabel?.classList.toggle("hidden", !categoryIsNew);
     productCategoryNew?.classList.toggle("hidden", !categoryIsNew);
-
-    if (!categoryIsNew && productCategoryNew) {
-      productCategoryNew.value = "";
-    }
+    if (!categoryIsNew && productCategoryNew) productCategoryNew.value = "";
 
     productBrandNewLabel?.classList.toggle("hidden", !brandIsNew);
     productBrandNew?.classList.toggle("hidden", !brandIsNew);
-
-    if (!brandIsNew && productBrandNew) {
-      productBrandNew.value = "";
-    }
+    if (!brandIsNew && productBrandNew) productBrandNew.value = "";
 
     productNcLabel?.classList.toggle("hidden", !isNetcom);
     productNc?.classList.toggle("hidden", !isNetcom);
-
-    if (!isNetcom && productNc) {
-      productNc.value = "";
-    }
+    if (!isNetcom && productNc) productNc.value = "";
   }
 
   function categoryOptions(selectedId) {
-    const current = selectedId ?? "";
-
     return allCategories.map((c) =>
-      `<option value="${c.id}" ${Number(c.id) === Number(current) ? "selected" : ""}>${esc(c.name)}</option>`
+      `<option value="${c.id}" ${Number(c.id) === Number(selectedId) ? "selected" : ""}>${esc(c.name)}</option>`
     ).join("") + `<option value="__new__">Neue Kategorie</option>`;
   }
 
   function brandOptions(selectedId) {
-    const current = selectedId ?? "";
-
     return allBrands.map((b) =>
-      `<option value="${b.id}" ${Number(b.id) === Number(current) ? "selected" : ""}>${esc(b.name)}</option>`
+      `<option value="${b.id}" ${Number(b.id) === Number(selectedId) ? "selected" : ""}>${esc(b.name)}</option>`
     ).join("") + `<option value="__new__">Neue Brand</option>`;
   }
 
   function fillProductFormForCreate() {
-    creatingNewProduct = true;
     editingProductId = null;
-
     productForm?.classList.remove("hidden");
     newProductBtn?.classList.add("hidden");
 
@@ -343,13 +281,11 @@
     if (productActive) productActive.value = "true";
 
     syncProductFormVisibility();
-
     setMsg("Neues Produkt anlegen.", "");
   }
 
   function productRowsForDisplay() {
     const q = (productSearch?.value || "").trim().toLowerCase();
-
     if (!q) return allProducts;
 
     return allProducts.filter((row) =>
@@ -362,6 +298,7 @@
   }
 
   function renderProducts(rows) {
+    if (!productsBody) return;
     productsBody.innerHTML = "";
 
     rows.forEach((row) => {
@@ -392,9 +329,9 @@
           try {
             await window.App.adminApi.updateProduct(row.id, {
               product_name: tr.querySelector(".productNameCell")?.value.trim() || "",
-              nc_nummer: tr.querySelector(".productNcCell")?.value.trim() || null,
               category_id: Number(tr.querySelector(".productCategoryCell")?.value || 0),
               brand_id: Number(tr.querySelector(".productBrandCell")?.value || 0),
+              nc_nummer: tr.querySelector(".productNcCell")?.value.trim() || null,
               active: tr.querySelector(".productActiveCell")?.value === "true"
             });
 
@@ -402,6 +339,7 @@
             setMsg("Produkt gespeichert.", "success");
             await loadProducts();
           } catch (err) {
+            console.error(err);
             setMsg(err.message || "Produkt konnte nicht gespeichert werden.", "error");
           }
         });
@@ -432,9 +370,7 @@
   }
 
   function fillSiteFormForCreate() {
-    creatingNewSite = true;
     editingSiteId = null;
-
     siteForm?.classList.remove("hidden");
 
     if (siteName) siteName.value = "";
@@ -444,6 +380,7 @@
   }
 
   function renderSites(rows) {
+    if (!sitesBody) return;
     sitesBody.innerHTML = "";
 
     rows.forEach((row) => {
@@ -478,6 +415,7 @@
             setMsg("Site gespeichert.", "success");
             await loadSites();
           } catch (err) {
+            console.error(err);
             setMsg(err.message || "Site konnte nicht gespeichert werden.", "error");
           }
         });
@@ -574,21 +512,19 @@
 
   newWorkerBtn?.addEventListener("click", clearWorkerFormForCreate);
 
-  workerAuthProvider?.addEventListener("change", syncWorkerLdapVisibility);
+  cancelWorkerCreateBtn?.addEventListener("click", () => {
+    workerForm?.classList.add("hidden");
+    newWorkerBtn?.classList.remove("hidden");
+  });
 
   workerFirstName?.addEventListener("input", () => {
-    if (!creatingNewWorker || !workerUsername) return;
+    if (!workerUsername) return;
     workerUsername.value = usernameFromName(workerFirstName.value, workerLastName?.value || "");
   });
 
   workerLastName?.addEventListener("input", () => {
-    if (!creatingNewWorker || !workerUsername) return;
+    if (!workerUsername) return;
     workerUsername.value = usernameFromName(workerFirstName?.value || "", workerLastName.value);
-  });
-
-  cancelWorkerCreateBtn?.addEventListener("click", () => {
-    workerForm?.classList.add("hidden");
-    newWorkerBtn?.classList.remove("hidden");
   });
 
   workerForm?.addEventListener("submit", async (e) => {
@@ -603,45 +539,33 @@
     }
 
     try {
-      if (creatingNewWorker) {
-        await window.App.adminApi.createWorker({
-          first_name: firstName,
-          last_name: lastName
-        });
-      } else {
-        await window.App.adminApi.updateWorker(editingWorkerId, {
-          first_name: firstName,
-          last_name: lastName,
-          username: workerUsername?.value.trim().toLowerCase() || "",
-          is_admin: workerAdmin?.value === "true",
-          is_active: workerActive?.value === "true",
-          auth_provider: workerAuthProvider?.value || "local",
-          ldap_dn: workerLdapDn?.value.trim() || null
-        });
-      }
+      await window.App.adminApi.createWorker({
+        first_name: firstName,
+        last_name: lastName
+      });
 
       workerForm?.classList.add("hidden");
       newWorkerBtn?.classList.remove("hidden");
-
       setMsg("Mitarbeiter gespeichert.", "success");
       await loadWorkers();
     } catch (err) {
+      console.error(err);
       setMsg(err.message || "Mitarbeiter konnte nicht gespeichert werden.", "error");
     }
   });
 
   newProductBtn?.addEventListener("click", fillProductFormForCreate);
 
+  cancelProductBtn?.addEventListener("click", () => {
+    productForm?.classList.add("hidden");
+    newProductBtn?.classList.remove("hidden");
+  });
+
   productCategory?.addEventListener("change", syncProductFormVisibility);
   productBrand?.addEventListener("change", syncProductFormVisibility);
 
   productSearch?.addEventListener("input", () => {
     renderProducts(productRowsForDisplay());
-  });
-
-  cancelProductBtn?.addEventListener("click", () => {
-    productForm?.classList.add("hidden");
-    newProductBtn?.classList.remove("hidden");
   });
 
   productForm?.addEventListener("submit", async (e) => {
@@ -653,10 +577,7 @@
 
       if ((productCategory?.value || "") === "__new__") {
         const newCategoryName = (productCategoryNew?.value || "").trim();
-
-        if (!newCategoryName) {
-          throw new Error("Neue Kategorie fehlt.");
-        }
+        if (!newCategoryName) throw new Error("Neue Kategorie fehlt.");
 
         await window.App.adminApi.createCategory(newCategoryName);
         await loadReferenceData();
@@ -665,19 +586,13 @@
           (c) => String(c.name || "").toLowerCase() === newCategoryName.toLowerCase()
         );
 
-        if (!createdCategory) {
-          throw new Error("Neue Kategorie wurde nicht gefunden.");
-        }
-
+        if (!createdCategory) throw new Error("Neue Kategorie wurde nicht gefunden.");
         categoryId = Number(createdCategory.id);
       }
 
       if ((productBrand?.value || "") === "__new__") {
         const newBrandName = (productBrandNew?.value || "").trim();
-
-        if (!newBrandName) {
-          throw new Error("Neue Brand fehlt.");
-        }
+        if (!newBrandName) throw new Error("Neue Brand fehlt.");
 
         await window.App.adminApi.createBrand(newBrandName);
         await loadReferenceData();
@@ -686,10 +601,7 @@
           (b) => String(b.name || "").toLowerCase() === newBrandName.toLowerCase()
         );
 
-        if (!createdBrand) {
-          throw new Error("Neue Brand wurde nicht gefunden.");
-        }
-
+        if (!createdBrand) throw new Error("Neue Brand wurde nicht gefunden.");
         brandId = Number(createdBrand.id);
       }
 
@@ -707,11 +619,11 @@
 
       productForm?.classList.add("hidden");
       newProductBtn?.classList.remove("hidden");
-
       setMsg("Produkt angelegt.", "success");
       await loadReferenceData();
       await loadProducts();
     } catch (err) {
+      console.error(err);
       setMsg(err.message || "Produkt konnte nicht angelegt werden.", "error");
     }
   });
@@ -731,18 +643,42 @@
       setMsg("Site angelegt.", "success");
       await loadSites();
     } catch (err) {
+      console.error(err);
       setMsg(err.message || "Site konnte nicht angelegt werden.", "error");
     }
   });
 
   showTab("users");
 
-  Promise.all([
-    loadWorkers(),
-    loadReferenceData(),
-    loadProducts(),
-    loadSites()
-  ]).catch((err) => {
-    setMsg(err.message || "Admin-Daten konnten nicht geladen werden.", "error");
-  });
+  async function initAdminPage() {
+    try {
+      await loadWorkers();
+    } catch (err) {
+      console.error("loadWorkers failed:", err);
+      setMsg(err.message || "Mitarbeiter konnten nicht geladen werden.", "error");
+    }
+
+    try {
+      await loadReferenceData();
+    } catch (err) {
+      console.error("loadReferenceData failed:", err);
+      setMsg(err.message || "Referenzdaten konnten nicht geladen werden.", "error");
+    }
+
+    try {
+      await loadProducts();
+    } catch (err) {
+      console.error("loadProducts failed:", err);
+      setMsg(err.message || "Produkte konnten nicht geladen werden.", "error");
+    }
+
+    try {
+      await loadSites();
+    } catch (err) {
+      console.error("loadSites failed:", err);
+      setMsg(err.message || "Sites konnten nicht geladen werden.", "error");
+    }
+  }
+
+  initAdminPage();
 })();

@@ -70,3 +70,18 @@
     grid-template-columns: 1fr;
   }
 }
+.inline-worker-password-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-worker-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.inline-worker-password-actions input {
+  min-width: 160px;
+}
+
