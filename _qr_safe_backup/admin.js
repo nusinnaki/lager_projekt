@@ -41,12 +41,8 @@
   const productActive = document.getElementById("productActive");
   const newProductBtn = document.getElementById("newProductBtn");
   const cancelProductBtn = document.getElementById("cancelProductBtn");
-  const printQrBtn = document.getElementById("printQrBtn");
-  const qrSiteModal = document.getElementById("qrSiteModal");
-  const qrSiteSelect = document.getElementById("qrSiteSelect");
-  const qrSiteConfirmBtn = document.getElementById("qrSiteConfirmBtn");
-  const qrSiteCancelBtn = document.getElementById("qrSiteCancelBtn");
-const siteForm = document.getElementById("siteForm");
+
+  const siteForm = document.getElementById("siteForm");
   const siteName = document.getElementById("siteName");
   const siteActive = document.getElementById("siteActive");
   const newSiteBtn = document.getElementById("newSiteBtn");
@@ -151,7 +147,6 @@ const siteForm = document.getElementById("siteForm");
         const activeValue = row.is_active ? "true" : "false";
 
         tr.innerHTML = `
-          <td></td>
           <td>${row.id}</td>
           <td><input class="workerFirstNameCell" type="text" value="${esc(row.first_name)}" /></td>
           <td><input class="workerLastNameCell" type="text" value="${esc(row.last_name)}" /></td>
@@ -355,20 +350,6 @@ const siteForm = document.getElementById("siteForm");
         });
       } else {
         tr.innerHTML = `
-          <td>
-            ${
-              qrSelectionMode
-                ? `
-                  <input
-                    class="qrSelect"
-                    type="checkbox"
-                    value="${row.id}"
-                  />
-                `
-                : ""
-            }
-          </td>
-
           <td>${row.id}</td>
           <td>${esc(row.product_name)}</td>
           <td>${esc(row.category_name)}</td>
@@ -383,12 +364,6 @@ const siteForm = document.getElementById("siteForm");
           renderProducts(productRowsForDisplay());
         });
       }
-
-      const checkbox = tr.querySelector(".qrSelect");
-
-      checkbox?.addEventListener("change", () => {
-        updateQrButtonState();
-      });
 
       productsBody.appendChild(tr);
     });
@@ -588,122 +563,6 @@ const siteForm = document.getElementById("siteForm");
 
   productCategory?.addEventListener("change", syncProductFormVisibility);
   productBrand?.addEventListener("change", syncProductFormVisibility);
-
-
-  
-
-
-  let qrSelectionMode = false;
-
-  function selectedQrProducts() {
-    return Array.from(
-      document.querySelectorAll(".qrSelect:checked")
-    ).map((x) => Number(x.value));
-  }
-
-  function updateQrButtonState() {
-    const selected = selectedQrProducts();
-
-    if (!qrSelectionMode) {
-      printQrBtn.textContent = "QR Codes";
-      printQrBtn.disabled = false;
-      return;
-    }
-
-    printQrBtn.textContent =
-      selected.length
-        ? `Drucken (${selected.length})`
-        : "Drucken";
-
-    printQrBtn.disabled = selected.length === 0;
-  }
-
-  function exitQrMode() {
-    qrSelectionMode = false;
-
-    document
-      .querySelectorAll(".qrSelect")
-      .forEach((x) => {
-        x.checked = false;
-      });
-
-    renderProducts(productRowsForDisplay());
-    updateQrButtonState();
-  }
-
-  function openQrSiteModal() {
-    if (!qrSiteSelect) return;
-
-    qrSiteSelect.innerHTML = allSites
-      .map((site) => `
-        <option value="${site.id}">
-          ${site.name}
-        </option>
-      `)
-      .join("");
-
-    qrSiteModal?.classList.remove("hidden");
-  }
-
-  printQrBtn?.addEventListener("click", async () => {
-    try {
-      if (!qrSelectionMode) {
-        qrSelectionMode = true;
-        renderProducts(productRowsForDisplay());
-        printQrBtn.disabled = true;
-        printQrBtn.textContent = "Drucken";
-        return;
-      }
-
-      const selected = selectedQrProducts();
-
-      if (!selected.length) {
-        return;
-      }
-
-      openQrSiteModal();
-
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message || "QR PDF Fehler.", "error");
-    }
-  });
-
-  qrSiteCancelBtn?.addEventListener("click", () => {
-    qrSiteModal?.classList.add("hidden");
-  });
-
-  qrSiteModal?.addEventListener("click", (event) => {
-    if (event.target === qrSiteModal) {
-      qrSiteModal.classList.add("hidden");
-    }
-  });
-
-  qrSiteConfirmBtn?.addEventListener("click", async () => {
-    try {
-      const selected = selectedQrProducts();
-      const siteId = Number(qrSiteSelect?.value || 0);
-
-      if (!selected.length) {
-        setMsg("Bitte Produkte auswählen.", "error");
-        return;
-      }
-
-      if (!siteId) {
-        setMsg("Bitte Site auswählen.", "error");
-        return;
-      }
-
-      await window.App.adminApi.openQrPdf(selected, siteId);
-
-      qrSiteModal?.classList.add("hidden");
-      exitQrMode();
-
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message || "QR PDF Fehler.", "error");
-    }
-  });
 
   productSearch?.addEventListener("input", () => {
     renderProducts(productRowsForDisplay());

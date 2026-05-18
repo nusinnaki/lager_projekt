@@ -99,31 +99,6 @@
     });
   }
 
-
-
-  async function openQrPdf(productIds, siteId) {
-    const token = localStorage.getItem("lager_token");
-
-    const response = await fetch(
-      `/api/admin/products/qr-pdf?site_id=${siteId}&product_ids=${productIds.join(",")}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("QR PDF konnte nicht erstellt werden.");
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    window.open(url, "_blank");
-  }
-
-
   async function listSites() {
     return window.App.api.get("/admin/sites");
   }
@@ -195,7 +170,6 @@
     createLocation,
     updateLocation,
     listProductSiteLocations,
-    setDefaultProductLocation,
-    openQrPdf
+    setDefaultProductLocation
   };
 })();

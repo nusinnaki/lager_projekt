@@ -85,3 +85,138 @@
   min-width: 160px;
 }
 
+
+.qr-panel {
+  margin-bottom: 14px;
+}
+
+.qr-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#qrSiteSelect {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.qrSelect {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+
+#printQrBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+.qr-site-modal {
+  max-width: 420px;
+}
+
+.qr-site-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.qr-site-modal label {
+  font-weight: 600;
+}
+
+#qrSiteSelect {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+}
+
+.qr-site-modal .toolbar {
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+
+.qr-site-modal {
+  max-width: 420px;
+}
+
+.qr-site-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.qr-site-modal label {
+  font-weight: 600;
+}
+
+#qrSiteSelect {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+}
+
+.qr-site-modal .toolbar {
+  justify-content: flex-end;
+}
+
+
+#qrSiteModal.modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+#qrSiteModal.hidden {
+  display: none !important;
+}
+
+#qrSiteModal .modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+  padding: 0;
+  overflow: hidden;
+}
+
+#qrSiteModal .modal-header {
+  padding: 18px 20px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#qrSiteModal .modal-body {
+  padding: 20px;
+}
+
+#qrSiteModal select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+}
+
+#qrSiteModal .toolbar {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
