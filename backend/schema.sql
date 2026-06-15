@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS locations (
   site_id INTEGER NOT NULL,
   shelf INTEGER NOT NULL,
   row INTEGER NOT NULL,
-  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
+  active INTEGER NOT NULL DEF-AULT 1 CHECK (active IN (0,1)),
   UNIQUE (site_id, shelf, row),
   FOREIGN KEY (site_id) REFERENCES sites(id)
 );

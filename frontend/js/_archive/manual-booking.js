@@ -10,7 +10,7 @@
 
     if (!site || !productId || !quantity || quantity <= 0) {
       if (message) {
-        message.textContent = "Bitte Site, Produkt und Menge korrekt eingeben.";
+        message.textContent = "Bitte Standort, Produkt und Menge korrekt eingeben.";
         message.className = "message error";
       }
       return;

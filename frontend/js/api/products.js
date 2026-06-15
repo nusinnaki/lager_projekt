@@ -15,7 +15,7 @@
     });
   }
 
-  async function resolveProductForSite(site, productId) {
+  async function resolveProductForStandort(site, productId) {
     return window.App.api.get(`/${site}/products/${productId}/resolve`);
   }
 
@@ -24,6 +24,6 @@
     listProducts,
     listLocations,
     setProductLocation,
-    resolveProductForSite
+    resolveProductForStandort
   };
 })();

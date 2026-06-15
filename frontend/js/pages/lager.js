@@ -264,7 +264,7 @@
   });
 
   async function loadManualProductsAndLocations() {
-    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
+    const site = (document.getElementById("manualStandort")?.value || "").trim().toLowerCase();
     const productSelect = document.getElementById("manualProductId");
     const locationSelect = document.getElementById("manualLocationId");
 
@@ -290,7 +290,7 @@
   }
 
   async function syncManualLocationVisibility() {
-    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
+    const site = (document.getElementById("manualStandort")?.value || "").trim().toLowerCase();
     const productId = Number(document.getElementById("manualProductId")?.value || 0);
     const locationLabel = document.getElementById("manualLocationLabel");
     const locationSelect = document.getElementById("manualLocationId");
@@ -302,7 +302,7 @@
     }
 
     try {
-      const data = await window.App.productsApi.resolveProductForSite(site, productId);
+      const data = await window.App.productsApi.resolveProductForStandort(site, productId);
 
       if (data && data.location_id) {
         hideEl(locationLabel);
@@ -320,7 +320,7 @@
 
     manualSubmitLocked = true;
 
-    const site = (document.getElementById("manualSite")?.value || "").trim().toLowerCase();
+    const site = (document.getElementById("manualStandort")?.value || "").trim().toLowerCase();
     const productId = Number(document.getElementById("manualProductId")?.value || 0);
     const action = document.getElementById("manualAction")?.value;
     const quantity = Number(document.getElementById("manualQty")?.value || 0);
@@ -367,7 +367,7 @@
 
   manualConfirmBtn?.addEventListener("click", handleManualConfirm);
 
-  document.getElementById("manualSite")?.addEventListener("change", async () => {
+  document.getElementById("manualStandort")?.addEventListener("change", async () => {
     await loadManualProductsAndLocations();
     await syncManualLocationVisibility();
   });
@@ -378,12 +378,12 @@
     const manualProductId = document.getElementById("manualProductId");
     const manualQty = document.getElementById("manualQty");
     const manualAction = document.getElementById("manualAction");
-    const manualSite = document.getElementById("manualSite");
+    const manualStandort = document.getElementById("manualStandort");
 
     if (manualProductId) manualProductId.value = "";
     if (manualQty) manualQty.value = "1";
     if (manualAction) manualAction.value = "load";
-    if (manualSite) manualSite.value = "konstanz";
+    if (manualStandort) manualStandort.value = "konstanz";
 
     setMessage("");
 

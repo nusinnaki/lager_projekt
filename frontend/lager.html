@@ -28,7 +28,7 @@
       text-align: right;
     }
 
-    #stockSiteFilter,
+    #stockStandortFilter,
     #stockCategoryFilter {
       min-width: 180px;
     }
@@ -67,9 +67,9 @@
         <div class="section-title">Manuelle Buchung</div>
 
         <div class="form-grid form-grid-wide">
-          <label for="manualSite">Site</label>
+          <label for="manualStandort">Standort</label>
 
-          <select id="manualSite">
+          <select id="manualStandort">
             <option value="konstanz">Konstanz</option>
             <option value="sindelfingen">Sindelfingen</option>
           </select>
@@ -135,7 +135,7 @@
           <div class="confirm-label">Aktion</div>
           <div id="confirmAction" class="confirm-value">-</div>
 
-          <div class="confirm-label">Site</div>
+          <div class="confirm-label">Standort</div>
           <div id="confirmLager" class="confirm-value">-</div>
 
           <div class="confirm-label">Kategorie</div>
@@ -205,8 +205,8 @@
       <div class="toolbar">
         <button id="stockScanBtn" type="button">Scan</button>
 
-        <select id="stockSiteFilter">
-          <option value="all">Alle Sites</option>
+        <select id="stockStandortFilter">
+          <option value="all">Alle Standorte</option>
         </select>
 
         <select id="stockCategoryFilter">

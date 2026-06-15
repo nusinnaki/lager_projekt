@@ -42,14 +42,15 @@
   const newProductBtn = document.getElementById("newProductBtn");
   const cancelProductBtn = document.getElementById("cancelProductBtn");
   const printQrBtn = document.getElementById("printQrBtn");
-  const qrSiteModal = document.getElementById("qrSiteModal");
-  const qrSiteSelect = document.getElementById("qrSiteSelect");
-  const qrSiteConfirmBtn = document.getElementById("qrSiteConfirmBtn");
-  const qrSiteCancelBtn = document.getElementById("qrSiteCancelBtn");
+  const cancelQrModeBtn = document.getElementById("cancelQrModeBtn");
+  const qrStandortModal = document.getElementById("qrStandortModal");
+  const qrStandortSelect = document.getElementById("qrStandortSelect");
+  const qrStandortConfirmBtn = document.getElementById("qrStandortConfirmBtn");
+  const qrStandortCancelBtn = document.getElementById("qrStandortCancelBtn");
 const siteForm = document.getElementById("siteForm");
   const siteName = document.getElementById("siteName");
   const siteActive = document.getElementById("siteActive");
-  const newSiteBtn = document.getElementById("newSiteBtn");
+  const newStandortBtn = document.getElementById("newStandortBtn");
 
   const adminMsg = document.getElementById("adminMsg");
 
@@ -57,11 +58,11 @@ const siteForm = document.getElementById("siteForm");
   let allProducts = [];
   let allCategories = [];
   let allBrands = [];
-  let allSites = [];
+  let allStandorte = [];
 
   let editingWorkerId = null;
   let editingProductId = null;
-  let editingSiteId = null;
+  let editingStandortId = null;
 
   function esc(value) {
     return String(value ?? "")
@@ -325,10 +326,86 @@ const siteForm = document.getElementById("siteForm");
             </select>
           </td>
           <td>
-            <button class="saveProductRowBtn" type="button">Speichern</button>
-            <button class="cancelProductRowBtn" type="button">Abbrechen</button>
+            <div class="product-edit-actions">
+              <button class="saveProductRowBtn" type="button">Speichern</button>
+              <button class="cancelProductRowBtn" type="button">Abbrechen</button>
+            </div>
+
+            <div class="product-location-editor">
+              <div class="mini-title">Lagerplatz</div>
+
+              <select class="productLocationStandortCell"></select>
+              <select class="productLocationCell"></select>
+
+              <button class="saveProductLocationBtn" type="button">
+                Lagerplatz speichern
+              </button>
+            </div>
           </td>
         `;
+
+        const productLocationStandortSelect = tr.querySelector(".productLocationStandortCell");
+        const productLocationSelect = tr.querySelector(".productLocationCell");
+
+        if (productLocationStandortSelect) {
+          productLocationStandortSelect.innerHTML = allStandorte
+            .map((site) => `
+              <option value="${site.id}">
+                ${site.name}
+              </option>
+            `)
+            .join("");
+        }
+
+        async function loadProductLocationsForSelectedStandort() {
+          const siteId = Number(productLocationStandortSelect?.value || 0);
+
+          if (!siteId || !productLocationSelect) return;
+
+          const locations = await window.App.adminApi.listLocations(siteId);
+
+          productLocationSelect.innerHTML =
+            `<option value="">Lagerplatz wählen</option>` +
+            (locations || []).map((loc) => `
+              <option value="${loc.id}">
+                Regal ${loc.shelf} / Fach ${loc.row}
+              </option>
+            `).join("");
+        }
+
+        productLocationStandortSelect?.addEventListener("change", () => {
+          loadProductLocationsForSelectedStandort().catch((err) => {
+            console.error(err);
+            setMsg("Lagerplätze konnten nicht geladen werden.", "error");
+          });
+        });
+
+        loadProductLocationsForSelectedStandort().catch((err) => {
+          console.error(err);
+          setMsg("Lagerplätze konnten nicht geladen werden.", "error");
+        });
+
+        tr.querySelector(".saveProductLocationBtn")?.addEventListener("click", async () => {
+          try {
+            const siteId = Number(productLocationStandortSelect?.value || 0);
+            const locationId = Number(productLocationSelect?.value || 0);
+
+            if (!siteId || !locationId) {
+              setMsg("Bitte Standort und Lagerplatz auswählen.", "error");
+              return;
+            }
+
+            await window.App.adminApi.setDefaultProductLocation(row.id, {
+              site_id: siteId,
+              location_id: locationId
+            });
+
+            setMsg("Lagerplatz gespeichert.", "success");
+          } catch (err) {
+            console.error(err);
+            setMsg(err.message || "Lagerplatz konnte nicht gespeichert werden.", "error");
+          }
+        });
 
         tr.querySelector(".saveProductRowBtn")?.addEventListener("click", async () => {
           try {
@@ -394,23 +471,23 @@ const siteForm = document.getElementById("siteForm");
     });
   }
 
-  function fillSiteFormForCreate() {
-    editingSiteId = null;
+  function fillStandortFormForCreate() {
+    editingStandortId = null;
     siteForm?.classList.remove("hidden");
 
     if (siteName) siteName.value = "";
     if (siteActive) siteActive.value = "true";
 
-    setMsg("Neue Site anlegen.", "");
+    setMsg("Neuer Standort anlegen.", "");
   }
 
-  function renderSites(rows) {
+  function renderStandorte(rows) {
     if (!sitesBody) return;
     sitesBody.innerHTML = "";
 
     rows.forEach((row) => {
       const tr = document.createElement("tr");
-      const isEditing = Number(editingSiteId) === Number(row.id);
+      const isEditing = Number(editingStandortId) === Number(row.id);
       const activeValue = row.active ? "true" : "false";
 
       if (isEditing) {
@@ -424,42 +501,42 @@ const siteForm = document.getElementById("siteForm");
             </select>
           </td>
           <td>
-            <button class="saveSiteRowBtn" type="button">Speichern</button>
-            <button class="cancelSiteRowBtn" type="button">Abbrechen</button>
+            <button class="saveStandortRowBtn" type="button">Speichern</button>
+            <button class="cancelStandortRowBtn" type="button">Abbrechen</button>
           </td>
         `;
 
-        tr.querySelector(".saveSiteRowBtn")?.addEventListener("click", async () => {
+        tr.querySelector(".saveStandortRowBtn")?.addEventListener("click", async () => {
           try {
-            await window.App.adminApi.updateSite(row.id, {
+            await window.App.adminApi.updateStandort(row.id, {
               name: tr.querySelector(".siteNameCell")?.value.trim() || "",
               active: tr.querySelector(".siteActiveCell")?.value === "true"
             });
 
-            editingSiteId = null;
-            setMsg("Site gespeichert.", "success");
-            await loadSites();
+            editingStandortId = null;
+            setMsg("Standort gespeichert.", "success");
+            await loadStandorte();
           } catch (err) {
             console.error(err);
-            setMsg(err.message || "Site konnte nicht gespeichert werden.", "error");
+            setMsg(err.message || "Standort konnte nicht gespeichert werden.", "error");
           }
         });
 
-        tr.querySelector(".cancelSiteRowBtn")?.addEventListener("click", () => {
-          editingSiteId = null;
-          renderSites(allSites);
+        tr.querySelector(".cancelStandortRowBtn")?.addEventListener("click", () => {
+          editingStandortId = null;
+          renderStandorte(allStandorte);
         });
       } else {
         tr.innerHTML = `
           <td>${row.id}</td>
           <td>${esc(row.name)}</td>
           <td>${row.active ? "Ja" : "Nein"}</td>
-          <td><button class="editSiteBtn" type="button">Bearbeiten</button></td>
+          <td><button class="editStandortBtn" type="button">Bearbeiten</button></td>
         `;
 
-        tr.querySelector(".editSiteBtn")?.addEventListener("click", () => {
-          editingSiteId = row.id;
-          renderSites(allSites);
+        tr.querySelector(".editStandortBtn")?.addEventListener("click", () => {
+          editingStandortId = row.id;
+          renderStandorte(allStandorte);
         });
       }
 
@@ -519,9 +596,9 @@ const siteForm = document.getElementById("siteForm");
     renderProducts(productRowsForDisplay());
   }
 
-  async function loadSites() {
-    allSites = await window.App.adminApi.listSites() || [];
-    renderSites(allSites);
+  async function loadStandorte() {
+    allStandorte = await window.App.adminApi.listStandorte() || [];
+    renderStandorte(allStandorte);
   }
 
   async function loadLogs() {
@@ -607,6 +684,9 @@ const siteForm = document.getElementById("siteForm");
     if (!qrSelectionMode) {
       printQrBtn.textContent = "QR Codes";
       printQrBtn.disabled = false;
+
+      cancelQrModeBtn?.classList.add("hidden");
+
       return;
     }
 
@@ -631,10 +711,10 @@ const siteForm = document.getElementById("siteForm");
     updateQrButtonState();
   }
 
-  function openQrSiteModal() {
-    if (!qrSiteSelect) return;
+  function openQrStandortModal() {
+    if (!qrStandortSelect) return;
 
-    qrSiteSelect.innerHTML = allSites
+    qrStandortSelect.innerHTML = allStandorte
       .map((site) => `
         <option value="${site.id}">
           ${site.name}
@@ -642,16 +722,21 @@ const siteForm = document.getElementById("siteForm");
       `)
       .join("");
 
-    qrSiteModal?.classList.remove("hidden");
+    qrStandortModal?.classList.remove("hidden");
   }
 
   printQrBtn?.addEventListener("click", async () => {
     try {
       if (!qrSelectionMode) {
         qrSelectionMode = true;
+
+        cancelQrModeBtn?.classList.remove("hidden");
+
         renderProducts(productRowsForDisplay());
+
         printQrBtn.disabled = true;
         printQrBtn.textContent = "Drucken";
+
         return;
       }
 
@@ -661,7 +746,7 @@ const siteForm = document.getElementById("siteForm");
         return;
       }
 
-      openQrSiteModal();
+      openQrStandortModal();
 
     } catch (err) {
       console.error(err);
@@ -669,20 +754,25 @@ const siteForm = document.getElementById("siteForm");
     }
   });
 
-  qrSiteCancelBtn?.addEventListener("click", () => {
-    qrSiteModal?.classList.add("hidden");
+  cancelQrModeBtn?.addEventListener("click", () => {
+    exitQrMode();
   });
 
-  qrSiteModal?.addEventListener("click", (event) => {
-    if (event.target === qrSiteModal) {
-      qrSiteModal.classList.add("hidden");
+
+  qrStandortCancelBtn?.addEventListener("click", () => {
+    qrStandortModal?.classList.add("hidden");
+  });
+
+  qrStandortModal?.addEventListener("click", (event) => {
+    if (event.target === qrStandortModal) {
+      qrStandortModal.classList.add("hidden");
     }
   });
 
-  qrSiteConfirmBtn?.addEventListener("click", async () => {
+  qrStandortConfirmBtn?.addEventListener("click", async () => {
     try {
       const selected = selectedQrProducts();
-      const siteId = Number(qrSiteSelect?.value || 0);
+      const siteId = Number(qrStandortSelect?.value || 0);
 
       if (!selected.length) {
         setMsg("Bitte Produkte auswählen.", "error");
@@ -690,13 +780,13 @@ const siteForm = document.getElementById("siteForm");
       }
 
       if (!siteId) {
-        setMsg("Bitte Site auswählen.", "error");
+        setMsg("Bitte Standort auswählen.", "error");
         return;
       }
 
       await window.App.adminApi.openQrPdf(selected, siteId);
 
-      qrSiteModal?.classList.add("hidden");
+      qrStandortModal?.classList.add("hidden");
       exitQrMode();
 
     } catch (err) {
@@ -769,23 +859,23 @@ const siteForm = document.getElementById("siteForm");
     }
   });
 
-  newSiteBtn?.addEventListener("click", fillSiteFormForCreate);
+  newStandortBtn?.addEventListener("click", fillStandortFormForCreate);
 
   siteForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-      await window.App.adminApi.createSite({
+      await window.App.adminApi.createStandort({
         name: siteName?.value.trim() || "",
         active: siteActive?.value === "true"
       });
 
       siteForm?.classList.add("hidden");
-      setMsg("Site angelegt.", "success");
-      await loadSites();
+      setMsg("Standort angelegt.", "success");
+      await loadStandorte();
     } catch (err) {
       console.error(err);
-      setMsg(err.message || "Site konnte nicht angelegt werden.", "error");
+      setMsg(err.message || "Standort konnte nicht angelegt werden.", "error");
     }
   });
 
@@ -814,10 +904,10 @@ const siteForm = document.getElementById("siteForm");
     }
 
     try {
-      await loadSites();
+      await loadStandorte();
     } catch (err) {
-      console.error("loadSites failed:", err);
-      setMsg(err.message || "Sites konnten nicht geladen werden.", "error");
+      console.error("loadStandorte failed:", err);
+      setMsg(err.message || "Standorte konnten nicht geladen werden.", "error");
     }
   }
 

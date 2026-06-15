@@ -124,15 +124,15 @@
   }
 
 
-  async function listSites() {
+  async function listStandorte() {
     return window.App.api.get("/admin/sites");
   }
 
-  async function createSite(name) {
+  async function createStandort(name) {
     return window.App.api.post("/admin/sites", { name });
   }
 
-  async function updateSite(siteId, payload) {
+  async function updateStandort(siteId, payload) {
     return window.App.api.request(`/admin/sites/${siteId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -157,7 +157,7 @@
     });
   }
 
-  async function listProductSiteLocations() {
+  async function listProductStandortLocations() {
     return window.App.api.get("/admin/product-site-locations");
   }
 
@@ -188,13 +188,13 @@
     listBrands,
     createBrand,
     updateBrand,
-    listSites,
-    createSite,
-    updateSite,
+    listStandorte,
+    createStandort,
+    updateStandort,
     listLocations,
     createLocation,
     updateLocation,
-    listProductSiteLocations,
+    listProductStandortLocations,
     setDefaultProductLocation,
     openQrPdf
   };

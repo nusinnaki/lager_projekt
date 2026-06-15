@@ -19,7 +19,7 @@
       <div class="tabs">
         <button id="tabUsers" class="primary" type="button">Mitarbeiter</button>
         <button id="tabProducts" type="button">Produkte</button>
-        <button id="tabSites" type="button">Sites</button>
+        <button id="tabSites" type="button">Standorte</button>
         <button id="tabLogs" type="button">Logs</button>
         <button id="backToLagerBtn" type="button">Zurück zu Lager</button>
       </div>
@@ -129,6 +129,14 @@
       <div class="toolbar">
         <button id="printQrBtn" type="button">QR Codes</button>
 
+        <button
+          id="cancelQrModeBtn"
+          class="hidden"
+          type="button"
+        >
+          Abbrechen
+        </button>
+
         <input
           id="productSearch"
           type="text"
@@ -155,10 +163,10 @@
     </section>
 
     <section id="sitesSection" class="card hidden">
-      <h2 class="section-title">Sites</h2>
+      <h2 class="section-title">Standorte</h2>
 
       <div class="toolbar">
-        <button id="newSiteBtn" type="button">Neue Site</button>
+        <button id="newStandortBtn" type="button">Neuer Standort</button>
       </div>
 
       <form id="siteForm" class="form-grid form-grid-wide hidden">
@@ -173,7 +181,7 @@
 
         <div></div>
         <div class="form-actions">
-          <button id="saveSiteBtn" class="primary" type="submit">Site speichern</button>
+          <button id="saveStandortBtn" class="primary" type="submit">Standort speichern</button>
         </div>
       </form>
 
@@ -205,7 +213,7 @@
               <th>Produkt-ID</th>
               <th>Produkt</th>
               <th>Menge</th>
-              <th>Site</th>
+              <th>Standort</th>
               <th>Regal</th>
               <th>Fach</th>
               <th>Mitarbeiter</th>
@@ -219,17 +227,17 @@
   </main>
 
 
-  <div id="qrSiteModal" class="modal-wrap hidden">
+  <div id="qrStandortModal" class="modal-wrap hidden">
     <div class="modal-card qr-site-modal">
-      <div class="modal-header">Site auswählen</div>
+      <div class="modal-header">Standort auswählen</div>
 
       <div class="modal-body">
-        <label for="qrSiteSelect">Site</label>
-        <select id="qrSiteSelect"></select>
+        <label for="qrStandortSelect">Standort</label>
+        <select id="qrStandortSelect"></select>
 
         <div class="toolbar">
-          <button id="qrSiteConfirmBtn" class="primary" type="button">Drucken</button>
-          <button id="qrSiteCancelBtn" type="button">Abbrechen</button>
+          <button id="qrStandortConfirmBtn" class="primary" type="button">Drucken</button>
+          <button id="qrStandortCancelBtn" type="button">Abbrechen</button>
         </div>
       </div>
     </div>

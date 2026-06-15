@@ -10,7 +10,7 @@
   }
 
   function siteFilter() {
-    return document.getElementById("stockSiteFilter");
+    return document.getElementById("stockStandortFilter");
   }
 
   function categoryFilter() {
@@ -70,7 +70,7 @@
       });
 
       siteSelect.innerHTML =
-        '<option value="all">Alle Sites</option>' +
+        '<option value="all">Alle Standorte</option>' +
         Array.from(sites.values())
           .sort()
           .map((name) => {
@@ -115,7 +115,7 @@
 
   function filteredRawRows() {
     const q = (stockSearch()?.value || "").trim().toLowerCase();
-    const selectedSite = siteFilter()?.value || "all";
+    const selectedStandort = siteFilter()?.value || "all";
     const selectedCategory = categoryFilter()?.value || "all";
 
     return rawStockRows.filter((row) => {
@@ -123,7 +123,7 @@
       const categoryName = String(row.category_name || "").toLowerCase();
 
       const siteOk =
-        selectedSite === "all" || siteName === selectedSite;
+        selectedStandort === "all" || siteName === selectedStandort;
 
       const categoryOk =
         selectedCategory === "all" ||
@@ -154,7 +154,7 @@
 
     tbody.innerHTML = "";
 
-    const selectedSite = siteFilter()?.value || "all";
+    const selectedStandort = siteFilter()?.value || "all";
     const grouped = groupRows(rows);
 
     const table = tbody.closest("table");
@@ -167,12 +167,12 @@
 
       if (shelfHeader) {
         shelfHeader.style.display =
-          selectedSite === "all" ? "none" : "";
+          selectedStandort === "all" ? "none" : "";
       }
 
       if (rowHeader) {
         rowHeader.style.display =
-          selectedSite === "all" ? "none" : "";
+          selectedStandort === "all" ? "none" : "";
       }
     }
 
@@ -181,17 +181,17 @@
       const qty = Number(item.total_quantity || 0);
 
       const shelf =
-        selectedSite === "all"
+        selectedStandort === "all"
           ? ""
           : (item.shelf ?? "");
 
       const row =
-        selectedSite === "all"
+        selectedStandort === "all"
           ? ""
           : (item.row ?? "");
 
       tr.innerHTML =
-        selectedSite === "all"
+        selectedStandort === "all"
           ? `
             <td>${item.product_name || ""}</td>
             <td>${item.brand_name || ""}</td>

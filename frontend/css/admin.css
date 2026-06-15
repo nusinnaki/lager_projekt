@@ -97,7 +97,7 @@
   flex-wrap: wrap;
 }
 
-#qrSiteSelect {
+#qrStandortSelect {
   min-width: 220px;
   max-width: 320px;
 }
@@ -128,7 +128,7 @@
   font-weight: 600;
 }
 
-#qrSiteSelect {
+#qrStandortSelect {
   width: 100%;
   min-height: 42px;
   padding: 8px 10px;
@@ -157,7 +157,7 @@
   font-weight: 600;
 }
 
-#qrSiteSelect {
+#qrStandortSelect {
   width: 100%;
   min-height: 42px;
   padding: 8px 10px;
@@ -171,7 +171,7 @@
 }
 
 
-#qrSiteModal.modal-wrap {
+#qrStandortModal.modal-wrap {
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -182,11 +182,11 @@
   background: rgba(15, 23, 42, 0.45);
 }
 
-#qrSiteModal.hidden {
+#qrStandortModal.hidden {
   display: none !important;
 }
 
-#qrSiteModal .modal-card {
+#qrStandortModal .modal-card {
   width: 100%;
   max-width: 420px;
   background: white;
@@ -196,17 +196,17 @@
   overflow: hidden;
 }
 
-#qrSiteModal .modal-header {
+#qrStandortModal .modal-header {
   padding: 18px 20px;
   font-weight: 700;
   border-bottom: 1px solid #e5e7eb;
 }
 
-#qrSiteModal .modal-body {
+#qrStandortModal .modal-body {
   padding: 20px;
 }
 
-#qrSiteModal select {
+#qrStandortModal select {
   width: 100%;
   min-height: 42px;
   padding: 8px 10px;
@@ -215,8 +215,38 @@
   background: white;
 }
 
-#qrSiteModal .toolbar {
+#qrStandortModal .toolbar {
   justify-content: flex-end;
   margin-top: 18px;
+}
+
+
+.product-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.product-location-editor {
+  display: grid;
+  gap: 7px;
+  min-width: 190px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.product-location-editor .mini-title {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.product-location-editor select {
+  min-height: 34px;
+  border-radius: 8px;
+}
+
+.product-location-editor button {
+  min-height: 34px;
 }
 
