@@ -78,10 +78,15 @@ Thumbs.db
 # Docker local override files
 docker-compose.override.yml
 
-# Local company data
-data/ingredients.csv
-data/ingredients.xlsx
-data/*ingredients*
-data/*Ingredients*
-data/*INGREDIENTS*
+# Real local data files
+data/workers.csv
+data/products.csv
+data/sites.csv
+data/*.xlsx
+data/*.pdf
+
+# Allow documentation and example files
+!data/README.md
+!data/*.example.csv
+!data/.gitkeep
 
