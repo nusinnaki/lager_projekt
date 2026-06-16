@@ -186,3 +186,23 @@ Then run the container again.
 ---
 
 This Docker setup runs the entire application with a single FastAPI server and a single exposed port.
+
+
+
+## Data files
+
+This repository does not include the real worker and product data files.
+
+The worker and product data contain internal company information and are therefore excluded from Git using `.gitignore`.
+
+To run the application with real data, request the required data files from the project maintainer.
+
+Expected local data location:
+
+```text
+data/
+  workers.csv
+  products.csv
+```
+
+After receiving the files, place them in the `data/` folder before starting the application.
