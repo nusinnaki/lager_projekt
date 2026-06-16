@@ -53,7 +53,6 @@ db/*-shm
 db/*-journal
 
 # Local app data
-data/
 uploads/
 exports/
 backups/
