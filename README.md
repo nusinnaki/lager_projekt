@@ -4,12 +4,15 @@ Local web-based inventory management system.
 
 Features:
 
+* Worker management
+* Product management
+* Product location assignment
+* Stock loading and removal
+* Stock tracking with full log history
+* QR code scanning and batch QR code printing
+* Admin management interface
 * FastAPI backend with SQLite database
 * Built-in frontend served by the backend
-* Worker and product management
-* Stock tracking with full log history
-* QR-based product selection
-* Admin-protected endpoints
 * Single-server architecture
 
 The FastAPI server serves:
@@ -18,7 +21,7 @@ The FastAPI server serves:
 * HTML pages
 * JavaScript
 * CSS
-* static assets
+* Static assets
 
 ---
 
@@ -59,7 +62,7 @@ docker run --rm -it -p 8000:8000 lager-projekt
 
 Explanation:
 
-```
+```text
 -p 8000:8000
 ```
 
@@ -74,6 +77,9 @@ docker run --rm -it \
   -p 8000:8000 \
   -v $(pwd)/db:/app/db \
   lager-projekt
+```
+
+Without the volume mount, a newly created container may start with a fresh database.
 
 ---
 
@@ -81,13 +87,13 @@ docker run --rm -it \
 
 Open your browser:
 
-```
+```text
 http://localhost:8000
 ```
 
 Main pages:
 
-```
+```text
 http://localhost:8000/        → Login
 http://localhost:8000/lager   → Inventory system
 http://localhost:8000/admin   → Admin panel
@@ -101,7 +107,7 @@ http://localhost:8000/admin   → Admin panel
 
 Do **not** open files using:
 
-```
+```text
 file://frontend/lager.html
 ```
 
@@ -109,7 +115,7 @@ The application requires the backend server to function.
 
 Always access the system through:
 
-```
+```text
 http://localhost:8000
 ```
 
@@ -129,15 +135,15 @@ Docker already provides this through the FastAPI server.
 
 Only **one port is required**:
 
-```
+```text
 8000 → FastAPI server
 ```
 
 The server provides:
 
-* API
-* frontend pages
-* static files
+* API endpoints
+* Frontend pages
+* Static files
 
 No separate frontend server is needed.
 
@@ -147,7 +153,7 @@ No separate frontend server is needed.
 
 The application uses a local SQLite database stored in:
 
-```
+```text
 db/Lager_live.db
 ```
 
@@ -159,7 +165,7 @@ If the database file does not exist, the application initializes the schema auto
 
 Press:
 
-```
+```text
 CTRL + C
 ```
 
@@ -179,4 +185,4 @@ Then run the container again.
 
 ---
 
-This Docker setup runs the entire application with a **single FastAPI server and a single exposed port**.
+This Docker setup runs the entire application with a single FastAPI server and a single exposed port.
